@@ -1,0 +1,9 @@
+CREATE TABLE expense_space_invite (
+    id BIGSERIAL PRIMARY KEY,
+    expense_space_id BIGINT NOT NULL REFERENCES expense_space(id),
+    token VARCHAR(64) NOT NULL UNIQUE,
+    created_by_user_id BIGINT NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE
+);
