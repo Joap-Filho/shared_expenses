@@ -11,6 +11,10 @@ import com.sharedexpenses.app.repository.UserRepository;
 import com.sharedexpenses.app.repository.ExpenseParticipantRepository;
 import com.sharedexpenses.app.repository.ExpenseSpaceRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +26,8 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/invites")
+@Tag(name = "Convites", description = "Endpoints para gerenciar convites para espaços de despesas")
+@SecurityRequirement(name = "Bearer Authentication")
 public class ExpenseSpaceInviteController {
 
     @Autowired
@@ -41,6 +47,7 @@ public class ExpenseSpaceInviteController {
 
 
     @PostMapping("/create")
+    @Operation(summary = "Criar convite", description = "Gera um token de convite para adicionar novos membros ao espaço de despesas (apenas OWNER/ADMIN)")
     public ResponseEntity<?> createInvite(@RequestParam Long expenseSpaceId) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -59,6 +66,7 @@ public class ExpenseSpaceInviteController {
     }
 
     @PostMapping("/accept")
+    @Operation(summary = "Aceitar convite", description = "Aceita um convite através do token e adiciona o usuário ao espaço de despesas")
     public ResponseEntity<?> acceptInvite(@RequestParam String token) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();

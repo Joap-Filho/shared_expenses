@@ -66,6 +66,7 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
 - **Banco de Dados:** PostgreSQL 15
 - **ORM:** Spring Data JPA + Hibernate
 - **Migrations:** Flyway
+- **Documentação API:** Swagger/OpenAPI 3
 - **Containerização:** Docker + Docker Compose
 - **Build:** Maven
 - **CI/CD:** GitHub Actions
@@ -143,7 +144,30 @@ export JWT_EXPIRATION=86400000
 ./mvnw spring-boot:run
 ```
 
+## 📚 Documentação da API
+
+A aplicação inclui documentação interativa da API usando Swagger/OpenAPI 3:
+
+- **Interface Swagger:** http://localhost:8080/docs
+- **Especificação OpenAPI:** http://localhost:8080/api-docs
+
+### Funcionalidades do Swagger:
+- 🔍 **Explorar endpoints** - Visualize todos os endpoints disponíveis
+- 🧪 **Testar APIs** - Execute requests diretamente da interface
+- 🔐 **Autenticação JWT** - Configure o token Bearer para endpoints protegidos
+- 📖 **Documentação detalhada** - Veja parâmetros, respostas e exemplos
+
+### Como usar:
+1. Acesse http://localhost:8080/docs
+2. Faça o registro/login em `/auth` para obter seu JWT token
+3. Clique em "Authorize" e insira o token no formato: `Bearer seu-token-aqui`
+4. Teste os endpoints protegidos!
+
 ## Endpoints Disponíveis
+
+### 📋 Documentação Interativa da API
+- **Swagger UI:** `GET /docs` - Interface interativa para testar os endpoints
+- **OpenAPI JSON:** `GET /api-docs` - Especificação da API em formato JSON
 
 ### Autenticação
 - `POST /auth/register` - Cadastro de usuário
@@ -155,6 +179,8 @@ export JWT_EXPIRATION=86400000
 ### Convites
 - `POST /api/invites/create` - Criar convite (OWNER/ADMIN apenas)
 - `POST /api/invites/accept` - Aceitar convite via token
+
+> 💡 **Dica:** Use o Swagger UI em `/docs` para testar os endpoints de forma interativa!
 
 ## Estrutura do Projeto
 
