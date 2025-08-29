@@ -130,13 +130,13 @@ docker-compose up --build
 
 ```bash
 # Configure o PostgreSQL localmente ou use Docker apenas para o banco
-docker run --name postgres -e POSTGRES_DB=shared_expenses -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:15
+docker run --name postgres -e POSTGRES_DB=shared_expenses -e POSTGRES_USER=youruser -e POSTGRES_PASSWORD=yourpassword -p 5432:5432 -d postgres:15
 
-# Configure as variáveis de ambiente
+# Configure as variáveis de ambiente (substitua pelos seus valores)
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/shared_expenses
-export POSTGRES_USER=user
-export POSTGRES_PASSWORD=password
-export JWT_SECRET=your-jwt-secret-key-here
+export POSTGRES_USER=youruser
+export POSTGRES_PASSWORD=yourpassword
+export JWT_SECRET=your-super-secret-jwt-key-here-must-be-at-least-32-characters
 export JWT_EXPIRATION=86400000
 
 # Execute a aplicação
