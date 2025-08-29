@@ -28,9 +28,6 @@ jobs:
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
-            echo "BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}" >> .env
-            echo "BREVO_SENDER_EMAIL=${{ secrets.BREVO_SENDER_EMAIL }}" >> .env
-            echo "BREVO_SENDER_NAME=${{ secrets.BREVO_SENDER_NAME }}" >> .env
 
             # Recria o container Docker
             docker-compose down

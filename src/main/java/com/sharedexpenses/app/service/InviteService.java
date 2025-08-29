@@ -14,10 +14,7 @@ public class InviteService {
     @Autowired
     private ExpenseSpaceInviteRepository inviteRepository;
 
-    @Autowired
-    private EmailService emailService;
-
-    public ExpenseSpaceInvite createInvite(Long expenseSpaceId, Long createdByUserId, String inviteeEmail, String inviteeName) {
+    public ExpenseSpaceInvite createInvite(Long expenseSpaceId, Long createdByUserId) {
         ExpenseSpaceInvite invite = new ExpenseSpaceInvite();
         invite.setExpenseSpaceId(expenseSpaceId);
         invite.setCreatedByUserId(createdByUserId);
@@ -27,12 +24,10 @@ public class InviteService {
 
         LocalDateTime now = LocalDateTime.now();
         invite.setCreatedAt(now);
-        invite.setExpirationDate(now.plusHours(1)); // expira em 1h
+        invite.setExpirationDate(now.plusHours(24)); // expira em 24h
         invite.setUsed(false);
 
         inviteRepository.save(invite);
-
-        emailService.sendInviteEmail(inviteeEmail, inviteeName, token);
 
         return invite;
     }

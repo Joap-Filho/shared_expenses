@@ -41,9 +41,7 @@ public class ExpenseSpaceInviteController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<?> createInvite(@RequestParam Long expenseSpaceId,
-                                          @RequestParam String inviteeEmail,
-                                          @RequestParam String inviteeName) {
+    public ResponseEntity<?> createInvite(@RequestParam Long expenseSpaceId) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
@@ -55,9 +53,7 @@ public class ExpenseSpaceInviteController {
 
         ExpenseSpaceInvite invite = inviteService.createInvite(
                 expenseSpaceId,
-                userRepository.findByEmail(userEmail).get().getId(),
-                inviteeEmail,
-                inviteeName);
+                userRepository.findByEmail(userEmail).get().getId());
 
         return ResponseEntity.ok(invite);
     }
