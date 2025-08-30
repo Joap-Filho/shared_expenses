@@ -5,11 +5,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import com.sharedexpenses.app.dto.CreateExpenseSpaceRequest;
 import com.sharedexpenses.app.entity.ExpenseSpace;
 import com.sharedexpenses.app.entity.User;
 import com.sharedexpenses.app.repository.UserRepository;
@@ -32,14 +30,14 @@ public class ExpenseSpaceController {
 
     @PostMapping("/create")
     @Operation(summary = "Criar espaço de despesas", description = "Cria um novo grupo para compartilhamento de despesas")
-    public ResponseEntity<?> createExpenseSpace(@RequestParam String name) {
+    public ResponseEntity<?> createExpenseSpace(@RequestBody CreateExpenseSpaceRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        ExpenseSpace expenseSpace = expenseSpaceService.createExpenseSpace(name, user);
+        ExpenseSpace expenseSpace = expenseSpaceService.createExpenseSpace(request.getName(), user);
 
         return ResponseEntity.ok(expenseSpace);
     }
