@@ -23,9 +23,13 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
 
 - **Sistema de Convites**
   - Geração de tokens de convite (`InviteService`)
-  - Validação e expiração de convites (24h)
+  - Validação e expiração de convites (2h para links)
   - Aceitação de convites via token
   - Endpoints para criar e aceitar convites (`ExpenseSpaceInviteController`)
+  - **Sistema de aprovação via link** (`InviteLinkController`)
+    - Links públicos: `https://divvyup.space/invite/{token}`
+    - Solicitações de entrada com aprovação manual
+    - Gestão de solicitações pendentes
 
 - **Estrutura de Dados**
   - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, etc.)
@@ -179,6 +183,13 @@ A aplicação inclui documentação interativa da API usando Swagger/OpenAPI 3:
 ### Convites
 - `POST /api/invites/create` - Criar convite (OWNER/ADMIN apenas)
 - `POST /api/invites/accept` - Aceitar convite via token
+
+### Sistema de Convites via Link
+- `GET /api/invite-link/{token}` - Obter informações do convite (público)
+- `POST /api/invite-link/{token}/request` - Solicitar entrada no grupo
+- `GET /api/invite-link/pending/{expenseSpaceId}` - Listar solicitações pendentes
+- `POST /api/invite-link/approve/{inviteId}` - Aprovar solicitação
+- `POST /api/invite-link/reject/{inviteId}` - Rejeitar solicitação
 
 > 💡 **Dica:** Use o Swagger UI em `/docs` para testar os endpoints de forma interativa!
 

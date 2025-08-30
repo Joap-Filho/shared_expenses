@@ -23,6 +23,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/invites")
@@ -62,7 +64,14 @@ public class ExpenseSpaceInviteController {
                 expenseSpaceId,
                 userRepository.findByEmail(userEmail).get().getId());
 
-        return ResponseEntity.ok(invite);
+        // Criar resposta com link formatado
+        Map<String, Object> response = new HashMap<>();
+        response.put("invite", invite);
+        response.put("inviteLink", "https://divvyup.space/invite/" + invite.getToken()); // Frontend Vercel
+        response.put("apiEndpoint", "https://api.divvyup.space/api/invite-link/" + invite.getToken()); // Para debug
+        response.put("expiresIn", "2 horas");
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/accept")

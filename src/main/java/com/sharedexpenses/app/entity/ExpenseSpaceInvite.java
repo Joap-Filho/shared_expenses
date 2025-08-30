@@ -3,6 +3,8 @@ package com.sharedexpenses.app.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import com.sharedexpenses.app.entity.enums.InviteStatus;
+
 @Entity
 @Table(name = "expense_space_invite")
 public class ExpenseSpaceInvite {
@@ -26,10 +28,28 @@ public class ExpenseSpaceInvite {
     @Column(name = "expiration_date", nullable = false)
     private LocalDateTime expirationDate;
 
+    // Campos do sistema legado (manter para compatibilidade)
     @Column(name = "used", nullable = false)
     private boolean used = false;
 
+    // Novos campos para o sistema de aprovação
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private InviteStatus status = InviteStatus.PENDING;
 
+    @Column(name = "requested_by_user_id")
+    private Long requestedByUserId;
+
+    @Column(name = "requested_at")
+    private LocalDateTime requestedAt;
+
+    @Column(name = "approved_rejected_at")
+    private LocalDateTime approvedRejectedAt;
+
+    @Column(name = "approved_rejected_by_user_id")
+    private Long approvedRejectedByUserId;
+
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -50,5 +70,20 @@ public class ExpenseSpaceInvite {
 
     public boolean isUsed() { return used; }
     public void setUsed(boolean used) { this.used = used; }
+
+    public InviteStatus getStatus() { return status; }
+    public void setStatus(InviteStatus status) { this.status = status; }
+
+    public Long getRequestedByUserId() { return requestedByUserId; }
+    public void setRequestedByUserId(Long requestedByUserId) { this.requestedByUserId = requestedByUserId; }
+
+    public LocalDateTime getRequestedAt() { return requestedAt; }
+    public void setRequestedAt(LocalDateTime requestedAt) { this.requestedAt = requestedAt; }
+
+    public LocalDateTime getApprovedRejectedAt() { return approvedRejectedAt; }
+    public void setApprovedRejectedAt(LocalDateTime approvedRejectedAt) { this.approvedRejectedAt = approvedRejectedAt; }
+
+    public Long getApprovedRejectedByUserId() { return approvedRejectedByUserId; }
+    public void setApprovedRejectedByUserId(Long approvedRejectedByUserId) { this.approvedRejectedByUserId = approvedRejectedByUserId; }
 }
 
