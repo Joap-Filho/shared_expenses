@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -48,9 +47,6 @@ public class ExpenseSpaceInviteController {
     @Autowired
     private ExpenseSpaceRepository expenseSpaceRepository;
 
-    @Value("${app.frontend.url}")
-    private String frontendUrl;
-
     @PostMapping("/create")
     @Operation(summary = "Criar convite", description = "Gera um token de convite para adicionar novos membros ao espaço de despesas (apenas OWNER/ADMIN)")
     public ResponseEntity<?> createInvite(@RequestParam Long expenseSpaceId) {
@@ -70,7 +66,7 @@ public class ExpenseSpaceInviteController {
         // Criar resposta com link formatado
         Map<String, Object> response = new HashMap<>();
         response.put("invite", invite);
-        response.put("inviteLink", frontendUrl + "/" + invite.getToken()); // Link direto para o token
+        response.put("inviteLink", "https://invite.divvyup.space/" + invite.getToken()); // URL hardcoded
         response.put("apiEndpoint", "/api/invite/" + invite.getToken() + "/info"); // Para debug
         response.put("expiresIn", "2 horas");
 
