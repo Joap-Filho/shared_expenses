@@ -34,3 +34,4 @@ build/
 
 .env
 .env.example
+FRONTEND_INVITE_GUIDE.md
