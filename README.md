@@ -1,4 +1,17 @@
-# Shared Expenses API (Spring Boot)
+# Shared Expenses API (- **Sistema de Convites**
+  - Geração de tokens de convite (`InviteService`)
+  - Validação e expiração de convites (2h para links)
+  - Aceitação de convites via token
+  - Endpoints para criar e aceitar convites (`ExpenseSpaceInviteController`)
+  - **Sistema de aprovação via link** (`InviteLinkController`)
+    - Links públicos: `https://invite.divvyup.space/{token}`
+    - Solicitações de entrada com aprovação manual
+    - Gestão de solicitações pendentes
+
+- **Configuração e Segurança**
+  - CORS configurado para permitir qualquer origem (`CorsConfig`)
+  - Autenticação JWT em todos os endpoints protegidos
+  - Configuração de segurança via Spring Securityot)
 
 API para gerenciamento de despesas compartilhadas entre pessoas que convivem em um mesmo ambiente (como repúblicas ou casas divididas). Permite criação de grupos de despesas, adição de participantes via convites, registro de gastos (com parcelamento ou recorrência), divisão automática e cálculo de saldos.
 
