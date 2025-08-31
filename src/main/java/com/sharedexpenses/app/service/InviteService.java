@@ -11,8 +11,6 @@ import com.sharedexpenses.app.dto.InviteInfoResponse;
 import com.sharedexpenses.app.dto.PendingRequestResponse;
 import com.sharedexpenses.app.dto.InviteCreatedResponse;
 import com.sharedexpenses.app.dto.InviteAcceptedResponse;
-import com.sharedexpenses.app.dto.InviteCreatedResponse;
-import com.sharedexpenses.app.dto.InviteAcceptedResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,7 +44,6 @@ public class InviteService {
         invite.setCreatedAt(now);
         invite.setExpirationDate(now.plusHours(2)); // expira em 2h
         invite.setStatus(InviteStatus.PENDING);
-        invite.setUsed(false);
 
         inviteRepository.save(invite);
 
@@ -132,7 +129,6 @@ public class InviteService {
         invite.setStatus(InviteStatus.ACCEPTED);
         invite.setApprovedRejectedAt(LocalDateTime.now());
         invite.setApprovedRejectedByUserId(approvedByUserId);
-        invite.setUsed(true); // Para compatibilidade com sistema antigo
 
         inviteRepository.save(invite);
     }
@@ -159,14 +155,10 @@ public class InviteService {
         ExpenseSpaceInvite invite = validateInvite(token);
         
         // Verificar se usuário já é membro
-        ExpenseSpace expenseSpace = expenseSpaceRepository.findById(invite.getExpenseSpaceId())
-            .orElseThrow(() -> new RuntimeException("ExpenseSpace not found"));
-            
         // Esta validação deveria estar no ExpenseParticipantService
         // Por enquanto vamos deixar aqui mas depois mover
         
         invite.setStatus(InviteStatus.ACCEPTED);
-        invite.setUsed(true);
         inviteRepository.save(invite);
         
         return invite;
@@ -177,7 +169,7 @@ public class InviteService {
      */
     public ExpenseSpaceInvite createInviteWithValidation(Long expenseSpaceId, String userEmail) {
         // Verificar se o expense space existe
-        ExpenseSpace expenseSpace = expenseSpaceRepository.findById(expenseSpaceId)
+        expenseSpaceRepository.findById(expenseSpaceId)
             .orElseThrow(() -> new RuntimeException("ExpenseSpace not found"));
             
         // Buscar usuário criador
@@ -210,7 +202,7 @@ public class InviteService {
             .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         // Validar e aceitar convite
-        ExpenseSpaceInvite invite = acceptInvite(token, user.getId());
+        acceptInvite(token, user.getId());
         
         // Aqui delegamos para o ExpenseParticipantService
         return null; // Será completado depois
@@ -226,8 +218,8 @@ public class InviteService {
             throw new RuntimeException("Invite token expired");
         }
 
-        if (invite.getStatus() != InviteStatus.ACCEPTED) {
-            throw new RuntimeException("Invite not approved yet");
+        if (invite.getStatus() != InviteStatus.PENDING) {
+            throw new RuntimeException("Invite not available for acceptance");
         }
 
         return invite;
@@ -250,8 +242,7 @@ public class InviteService {
         return invite;
     }
 
-    public void markInviteUsed(ExpenseSpaceInvite invite) {
-        invite.setUsed(true);
+    public void markInviteAccepted(ExpenseSpaceInvite invite) {
         invite.setStatus(InviteStatus.ACCEPTED);
         inviteRepository.save(invite);
     }

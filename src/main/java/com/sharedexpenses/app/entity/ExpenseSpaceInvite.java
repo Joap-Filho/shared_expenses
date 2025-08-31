@@ -28,10 +28,6 @@ public class ExpenseSpaceInvite {
     @Column(name = "expiration_date", nullable = false)
     private LocalDateTime expirationDate;
 
-    // Campos do sistema legado (manter para compatibilidade)
-    @Column(name = "used", nullable = false)
-    private boolean used = false;
-
     // Novos campos para o sistema de aprovação
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -67,9 +63,6 @@ public class ExpenseSpaceInvite {
 
     public LocalDateTime getExpirationDate() { return expirationDate; }
     public void setExpirationDate(LocalDateTime expirationDate) { this.expirationDate = expirationDate; }
-
-    public boolean isUsed() { return used; }
-    public void setUsed(boolean used) { this.used = used; }
 
     public InviteStatus getStatus() { return status; }
     public void setStatus(InviteStatus status) { this.status = status; }
