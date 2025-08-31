@@ -1,6 +1,5 @@
 package com.sharedexpenses.app.service;
 
-import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,12 +39,19 @@ public void register(String name, String email, String password) {
 }
 
     public AuthResponse login(String email, String senha) {
-        Authentication auth = authenticationManager.authenticate(
+        authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(email, senha)
         );
 
         String token = jwtService.generateToken(email);
         return new AuthResponse(token);
+    }
+
+    /**
+     * Gera token JWT para um email específico (usado após registro)
+     */
+    public String generateTokenForEmail(String email) {
+        return jwtService.generateToken(email);
     }
 }
 

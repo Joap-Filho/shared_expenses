@@ -37,7 +37,11 @@ public class AuthController {
     })
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         authService.register(request.getName(), request.getEmail(), request.getPassword());
-        AuthResponse response = authService.login(request.getEmail(), request.getPassword());
+        
+        // Gerar token diretamente após registro bem-sucedido
+        String token = authService.generateTokenForEmail(request.getEmail());
+        AuthResponse response = new AuthResponse(token);
+        
         return ResponseEntity.ok(response);
     }
 
