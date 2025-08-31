@@ -1,30 +1,25 @@
- package com.sharedexpenses.app.controller;
+package com.sharedexpenses.app.controller;
 
 import com.sharedexpenses.app.dto.InviteInfoResponse;
 import com.sharedexpenses.app.dto.PendingRequestResponse;
-import com.sharedexpenses.app.entity.ExpenseParticipant;
-import com.sharedexpenses.app.entity.ExpenseSpace;
-import com.sharedexpenses.app.entity.ExpenseSpaceInvite;
-import com.sharedexpenses.app.entity.User;
-import com.sharedexpenses.app.entity.enums.RoleType;
 import com.sharedexpenses.app.service.InviteService;
-import com.sharedexpenses.app.service.ExpenseParticipantService;
-import com.sharedexpenses.app.repository.UserRepository;
-import com.sharedexpenses.app.repository.ExpenseParticipantRepository;
-import com.sharedexpenses.app.repository.ExpenseSpaceRepository;
+import com.sharedexpenses.app.service.InviteOrchestrationService;
+import com.sharedexpenses.app.util.AuthenticationUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -32,26 +27,28 @@ import java.util.List;
 @Tag(name = "Convites via Link", description = "Sistema de convites via link com aprovação")
 public class InviteLinkController {
 
+    private static final Logger logger = LoggerFactory.getLogger(InviteLinkController.class);
+
     @Autowired
     private InviteService inviteService;
 
     @Autowired
-    private ExpenseParticipantService expenseParticipantService;
+    private InviteOrchestrationService inviteOrchestrationService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ExpenseParticipantRepository expenseParticipantRepository;
-
-    @Autowired
-    private ExpenseSpaceRepository expenseSpaceRepository;
+    private AuthenticationUtil authenticationUtil;
 
     @GetMapping("/{token}")
     @Operation(summary = "Obter informações do convite", 
                description = "Endpoint público para validar um token de convite e obter informações do grupo")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Informações do convite obtidas com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
+    })
     public ResponseEntity<InviteInfoResponse> getInviteInfo(
             @Parameter(description = "Token do convite") @PathVariable String token) {
+        
+        logger.info("Processando solicitação de informações do convite para token: {}", token);
         
         InviteInfoResponse response = inviteService.getInviteInfo(token);
         
@@ -66,19 +63,22 @@ public class InviteLinkController {
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Solicitar entrada no grupo", 
                description = "Usuário autenticado solicita entrada no grupo via convite")
-    public ResponseEntity<?> requestToJoin(
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Solicitação enviada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Token inválido ou usuário já é membro"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    })
+    public ResponseEntity<String> requestToJoin(
             @Parameter(description = "Token do convite") @PathVariable String token) {
         
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        User user = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
+        logger.info("Processando solicitação de entrada para token: {}", token);
+        
         try {
-            inviteService.requestToJoin(token, user.getId());
-            return ResponseEntity.ok("Solicitação enviada! Aguarde a aprovação do administrador do grupo.");
+            String userEmail = authenticationUtil.getCurrentUserEmail();
+            String message = inviteOrchestrationService.requestToJoin(token, userEmail);
+            return ResponseEntity.ok(message);
         } catch (RuntimeException e) {
+            logger.error("Erro ao processar solicitação de entrada: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -87,70 +87,47 @@ public class InviteLinkController {
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Listar solicitações pendentes", 
                description = "Lista todas as solicitações de entrada pendentes para um grupo (apenas OWNER/ADMIN)")
-    public ResponseEntity<?> getPendingRequests(
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de solicitações pendentes obtida com sucesso"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário sem permissão"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    })
+    public ResponseEntity<List<PendingRequestResponse>> getPendingRequests(
             @Parameter(description = "ID do espaço de despesas") @PathVariable Long expenseSpaceId) {
         
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        // Verificar permissão
+        logger.info("Listando solicitações pendentes para expense space: {}", expenseSpaceId);
+        
         try {
-            RoleType role = expenseParticipantService.getRoleByUserEmailAndExpenseSpaceId(userEmail, expenseSpaceId);
-            if (role != RoleType.OWNER && role != RoleType.ADMIN) {
-                return ResponseEntity.status(403).body("Acesso negado");
-            }
+            String userEmail = authenticationUtil.getCurrentUserEmail();
+            List<PendingRequestResponse> pendingRequests = inviteOrchestrationService.getPendingRequests(expenseSpaceId, userEmail);
+            return ResponseEntity.ok(pendingRequests);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(403).body("Usuário não é membro deste grupo");
+            logger.error("Erro ao listar solicitações pendentes: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
-
-        List<PendingRequestResponse> pendingRequests = inviteService.getPendingRequests(expenseSpaceId);
-        return ResponseEntity.ok(pendingRequests);
     }
 
     @PostMapping("/approve/{inviteId}")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Aprovar solicitação", 
                description = "Aprova uma solicitação de entrada e adiciona o usuário ao grupo (apenas OWNER/ADMIN)")
-    public ResponseEntity<?> approveRequest(
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Solicitação aprovada com sucesso"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário sem permissão"),
+        @ApiResponse(responseCode = "400", description = "Erro na validação da solicitação"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    })
+    public ResponseEntity<String> approveRequest(
             @Parameter(description = "ID do convite") @PathVariable Long inviteId) {
         
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        User approver = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
+        logger.info("Aprovando solicitação de convite: {}", inviteId);
+        
         try {
-            // Buscar o convite primeiro
-            ExpenseSpaceInvite invite = inviteService.getInviteById(inviteId);
-            
-            // Verificar se o usuário tem permissão neste grupo
-            RoleType role = expenseParticipantService.getRoleByUserEmailAndExpenseSpaceId(userEmail, invite.getExpenseSpaceId());
-            if (role != RoleType.OWNER && role != RoleType.ADMIN) {
-                return ResponseEntity.status(403).body("Acesso negado");
-            }
-            
-            // Aprovar o convite
-            inviteService.approveRequest(inviteId, approver.getId());
-
-            // Adicionar usuário como MEMBER
-            User requestedUser = userRepository.findById(invite.getRequestedByUserId())
-                .orElseThrow(() -> new RuntimeException("Usuário solicitante não encontrado"));
-
-            ExpenseSpace expenseSpace = expenseSpaceRepository.findById(invite.getExpenseSpaceId())
-                .orElseThrow(() -> new RuntimeException("Grupo não encontrado"));
-
-            ExpenseParticipant participant = new ExpenseParticipant();
-            participant.setUser(requestedUser);
-            participant.setExpenseSpace(expenseSpace);
-            participant.setRole(RoleType.MEMBER);
-            participant.setJoinedAt(LocalDateTime.now());
-
-            expenseParticipantRepository.save(participant);
-
-            return ResponseEntity.ok("Solicitação aprovada! Usuário foi adicionado ao grupo.");
-
+            String approverEmail = authenticationUtil.getCurrentUserEmail();
+            String message = inviteOrchestrationService.approveRequest(inviteId, approverEmail);
+            return ResponseEntity.ok(message);
         } catch (RuntimeException e) {
+            logger.error("Erro ao aprovar solicitação: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -159,28 +136,23 @@ public class InviteLinkController {
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Rejeitar solicitação", 
                description = "Rejeita uma solicitação de entrada no grupo (apenas OWNER/ADMIN)")
-    public ResponseEntity<?> rejectRequest(
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Solicitação rejeitada com sucesso"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário sem permissão"),
+        @ApiResponse(responseCode = "400", description = "Erro na validação da solicitação"),
+        @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    })
+    public ResponseEntity<String> rejectRequest(
             @Parameter(description = "ID do convite") @PathVariable Long inviteId) {
         
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        User rejecter = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
+        logger.info("Rejeitando solicitação de convite: {}", inviteId);
+        
         try {
-            // Buscar o convite primeiro
-            ExpenseSpaceInvite invite = inviteService.getInviteById(inviteId);
-            
-            // Verificar se o usuário tem permissão neste grupo
-            RoleType role = expenseParticipantService.getRoleByUserEmailAndExpenseSpaceId(userEmail, invite.getExpenseSpaceId());
-            if (role != RoleType.OWNER && role != RoleType.ADMIN) {
-                return ResponseEntity.status(403).body("Acesso negado");
-            }
-            
-            inviteService.rejectRequest(inviteId, rejecter.getId());
-            return ResponseEntity.ok("Solicitação rejeitada.");
+            String rejecterEmail = authenticationUtil.getCurrentUserEmail();
+            String message = inviteOrchestrationService.rejectRequest(inviteId, rejecterEmail);
+            return ResponseEntity.ok(message);
         } catch (RuntimeException e) {
+            logger.error("Erro ao rejeitar solicitação: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
