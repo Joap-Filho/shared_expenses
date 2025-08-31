@@ -119,4 +119,16 @@ public class ExpenseController {
         List<ExpenseResponse> generatedExpenses = expenseService.generateCurrentMonthRecurringExpenses(userEmail);
         return ResponseEntity.ok(generatedExpenses);
     }
+
+    /**
+     * Deleta uma configuração de despesa recorrente e todas suas despesas
+     */
+    @DeleteMapping("/recurring/{recurringId}")
+    public ResponseEntity<Void> deleteRecurringExpense(
+            @PathVariable Long recurringId,
+            Authentication authentication) {
+        String userEmail = authentication.getName();
+        expenseService.deleteRecurringExpense(recurringId, userEmail);
+        return ResponseEntity.noContent().build();
+    }
 }

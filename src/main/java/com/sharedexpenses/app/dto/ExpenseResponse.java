@@ -31,6 +31,7 @@ public class ExpenseResponse {
     // Para despesas recorrentes  
     private String recurrenceType;
     private LocalDate endDate;
+    private Long recurringExpenseId;
 
     // Nested classes para informações detalhadas
     public static class BeneficiaryInfo {
@@ -169,4 +170,7 @@ public class ExpenseResponse {
 
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+
+    public Long getRecurringExpenseId() { return recurringExpenseId; }
+    public void setRecurringExpenseId(Long recurringExpenseId) { this.recurringExpenseId = recurringExpenseId; }
 }

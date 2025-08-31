@@ -217,6 +217,9 @@ public class ExpenseService {
     /**
      * Remove uma despesa
      */
+    /**
+     * Exclui despesa e sua configuração de recorrência se aplicável
+     */
     public void deleteExpense(Long expenseId, String userEmail) {
         Expense expense = expenseRepository.findById(expenseId)
             .orElseThrow(() -> new RuntimeException("Despesa não encontrada"));
@@ -230,6 +233,24 @@ public class ExpenseService {
 
         if (!canDelete) {
             throw new RuntimeException("Sem permissão para excluir esta despesa");
+        }
+
+        // Se for despesa recorrente, verificar se deve remover a configuração
+        if (expense.getRecurringExpense() != null) {
+            RecurringExpense recurringExpense = expense.getRecurringExpense();
+            
+            // Verificar se existem outras despesas usando esta configuração
+            List<Expense> otherExpenses = expenseRepository.findAll()
+                .stream()
+                .filter(e -> e.getRecurringExpense() != null && 
+                           e.getRecurringExpense().getId().equals(recurringExpense.getId()) &&
+                           !e.getId().equals(expenseId))
+                .collect(Collectors.toList());
+            
+            // Se não há outras despesas, remover a configuração recorrente também
+            if (otherExpenses.isEmpty()) {
+                recurringExpenseRepository.delete(recurringExpense);
+            }
         }
 
         expenseRepository.delete(expense);
@@ -517,6 +538,7 @@ public class ExpenseService {
         if (recurringExpense != null) {
             response.setRecurrenceType(recurringExpense.getRecurrence().toString());
             response.setEndDate(recurringExpense.getEndDate());
+            response.setRecurringExpenseId(recurringExpense.getId()); // ✅ Agora expõe o ID!
         }
     }
 
@@ -587,5 +609,38 @@ public class ExpenseService {
         expense.setRecurringExpense(recurring);
         
         return expense;
+    }
+
+    /**
+     * Deleta uma configuração recorrente e todas suas despesas
+     */
+    @Transactional
+    public void deleteRecurringExpense(Long recurringId, String userEmail) {
+        RecurringExpense recurring = recurringExpenseRepository.findById(recurringId)
+            .orElseThrow(() -> new RuntimeException("Configuração recorrente não encontrada"));
+
+        // Validar permissões - apenas quem criou ou admins/owners podem excluir
+        User user = userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        boolean canDelete = recurring.getPaidBy().getId().equals(user.getId()) ||
+            hasAdminPermission(userEmail, recurring.getExpenseSpace().getId());
+
+        if (!canDelete) {
+            throw new RuntimeException("Sem permissão para excluir esta configuração recorrente");
+        }
+
+        // Buscar todas as despesas relacionadas a esta configuração
+        List<Expense> relatedExpenses = expenseRepository.findAll()
+            .stream()
+            .filter(e -> e.getRecurringExpense() != null && 
+                        e.getRecurringExpense().getId().equals(recurringId))
+            .collect(Collectors.toList());
+
+        // Deletar todas as despesas relacionadas
+        expenseRepository.deleteAll(relatedExpenses);
+
+        // Deletar a configuração recorrente
+        recurringExpenseRepository.delete(recurring);
     }
 }
