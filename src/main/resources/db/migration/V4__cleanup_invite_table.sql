@@ -1,7 +1,7 @@
 -- Limpar inconsistências na tabela de convites
 
--- Criar ENUM para status do convite
-CREATE TYPE invite_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED');
+-- Criar ENUM para status do convite (incluindo REQUESTED)
+CREATE TYPE invite_status AS ENUM ('PENDING', 'REQUESTED', 'ACCEPTED', 'REJECTED', 'EXPIRED');
 
 -- Primeiro, atualizar todos os valores existentes para serem compatíveis
 UPDATE expense_space_invite 
