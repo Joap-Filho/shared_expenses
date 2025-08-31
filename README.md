@@ -1,17 +1,4 @@
-# Shared Expenses API (- **Sistema de Convites**
-  - Geração de tokens de convite (`InviteService`)
-  - Validação e expiração de convites (2h para links)
-  - Aceitação de convites via token
-  - Endpoints para criar e aceitar convites (`ExpenseSpaceInviteController`)
-  - **Sistema de aprovação via link** (`InviteLinkController`)
-    - Links públicos: `https://invite.divvyup.space/{token}`
-    - Solicitações de entrada com aprovação manual
-    - Gestão de solicitações pendentes
-
-- **Configuração e Segurança**
-  - CORS configurado para permitir qualquer origem (`CorsConfig`)
-  - Autenticação JWT em todos os endpoints protegidos
-  - Configuração de segurança via Spring Securityot)
+# Shared Expenses API
 
 API para gerenciamento de despesas compartilhadas entre pessoas que convivem em um mesmo ambiente (como repúblicas ou casas divididas). Permite criação de grupos de despesas, adição de participantes via convites, registro de gastos (com parcelamento ou recorrência), divisão automática e cálculo de saldos.
 
@@ -40,19 +27,37 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
   - Aceitação de convites via token
   - Endpoints para criar e aceitar convites (`ExpenseSpaceInviteController`)
   - **Sistema de aprovação via link** (`InviteLinkController`)
-    - Links públicos: `https://divvyup.space/invite/{token}`
+    - Links públicos: `https://invite.divvyup.space/{token}`
     - Solicitações de entrada com aprovação manual
     - Gestão de solicitações pendentes
 
-- **Estrutura de Dados**
-  - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, etc.)
-  - Migrations com Flyway (v1_create_tables.sql, v2_expense_space_invitation.sql)
-  - Relacionamentos entre entidades configurados
+- **Arquitetura e Organização**
+  - Services de orquestração (`InviteOrchestrationService`)
+  - Services de autorização (`AuthorizationService`)
+  - Utilitários de autenticação (`AuthenticationUtil`)
+  - DTOs específicos para respostas de API
+  - Separação clara de responsabilidades (Clean Architecture)
 
-- **Containerização**
+- **Configuração e Segurança**
+  - CORS configurado para permitir qualquer origem (`CorsConfig`)
+  - Autenticação JWT em todos os endpoints protegidos
+  - Configuração de segurança via Spring Security
+
+- **Documentação API**
+  - Swagger/OpenAPI 3 integrado
+  - Interface interativa em `/docs`
+  - Documentação completa com exemplos e schemas
+
+- **Estrutura de Dados e Banco**
+  - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, etc.)
+  - Migrations com Flyway (v1_create_tables.sql, v2_expense_space_invitation.sql, V3_invite_status_system.sql)
+  - Relacionamentos entre entidades configurados
+  - Sistema de ENUMs para status e tipos
+
+- **Containerização e Deploy**
   - Dockerfile para aplicação Spring Boot
   - Docker Compose com PostgreSQL
-  - Pipeline CI/CD com GitHub Actions
+  - Configuração de variáveis de ambiente
 
 ### 🚧 Em Desenvolvimento/Pendente
 
@@ -86,80 +91,7 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
 - **Documentação API:** Swagger/OpenAPI 3
 - **Containerização:** Docker + Docker Compose
 - **Build:** Maven
-- **CI/CD:** GitHub Actions
-
-## Requisitos Técnicos
-
-- Java 21+
-- Maven 3.9+
-- Docker e Docker Compose
-- PostgreSQL (via Docker)
-- VS Code ou IntelliJ IDEA
-
-## Modelagem do Banco de Dados
-
-### Usuário (User)
-- ID, Nome, Email, Hash da Senha, Data de Criação
-
-### Espaço de Despesas (ExpenseSpace)
-- ID, Nome, Criado por User ID
-
-### Participante (ExpenseParticipant)
-- ID, User ID, ExpenseSpace ID, Role (OWNER/ADMIN/MEMBER), Data de Entrada
-
-### Convite (ExpenseSpaceInvite)
-- ID, ExpenseSpace ID, Token único, Criado por User ID, Data de Criação, Data de Expiração, Status (usado/não usado)
-
-### Despesa (Expense) - *Estrutura criada*
-- ID, Descrição, Valor Total, Data, Tipo (Simples/Parcelada/Recorrente), Pago por User ID, Incluir pagador na divisão, ExpenseSpace ID
-
-### Parcela (ExpenseInstallment) - *Estrutura criada*
-- ID, Expense ID, Número da parcela, Data de vencimento, Valor, Status (pago/não pago)
-
-### Despesa Recorrente (RecurringExpense) - *Estrutura criada*
-- ID, Descrição, Valor, Tipo de Recorrência, Data de início/fim, ExpenseSpace ID
-
-## Papéis e Permissões
-
-| Papel   | Permissões |
-|---------|------------|
-| OWNER   | Controle total do grupo, pode remover outros admins |
-| ADMIN   | Convida/remove membros, adiciona despesas, gerencia configurações |
-| MEMBER  | Adiciona despesas, visualiza saldos, participa das divisões |
-
-## Executando o Projeto
-
-### Com Docker (Recomendado)
-
-```bash
-# Clone o repositório
-git clone <repo-url>
-cd shared-expenses
-
-# Configure as variáveis de ambiente
-cp .env.example .env
-# Edite o arquivo .env com suas configurações
-
-# Execute com Docker Compose
-docker-compose up --build
-```
-
-### Desenvolvimento Local
-
-```bash
-# Configure o PostgreSQL localmente ou use Docker apenas para o banco
-docker run --name postgres -e POSTGRES_DB=shared_expenses -e POSTGRES_USER=youruser -e POSTGRES_PASSWORD=yourpassword -p 5432:5432 -d postgres:15
-
-# Configure as variáveis de ambiente (substitua pelos seus valores)
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/shared_expenses
-export POSTGRES_USER=youruser
-export POSTGRES_PASSWORD=yourpassword
-export JWT_SECRET=your-super-secret-jwt-key-here-must-be-at-least-32-characters
-export JWT_EXPIRATION=86400000
-
-# Execute a aplicação
-./mvnw spring-boot:run
-```
+- **Arquitetura:** Clean Architecture, SOLID principles
 
 ## 📚 Documentação da API
 
@@ -219,6 +151,48 @@ src/main/java/com/sharedexpenses/app/
 └── service/        # Lógica de negócio
 ```
 
+## Requisitos Técnicos
+
+- Java 21+
+- Maven 3.9+
+- Docker e Docker Compose
+- PostgreSQL (via Docker)
+- VS Code ou IntelliJ IDEA
+
+## Executando o Projeto
+
+### Com Docker (Recomendado)
+
+```bash
+# Clone o repositório
+git clone <repo-url>
+cd shared-expenses
+
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
+
+# Execute com Docker Compose
+docker-compose up --build
+```
+
+### Desenvolvimento Local
+
+```bash
+# Configure o PostgreSQL localmente ou use Docker apenas para o banco
+docker run --name postgres -e POSTGRES_DB=shared_expenses -e POSTGRES_USER=youruser -e POSTGRES_PASSWORD=yourpassword -p 5432:5432 -d postgres:15
+
+# Configure as variáveis de ambiente (substitua pelos seus valores)
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/shared_expenses
+export POSTGRES_USER=youruser
+export POSTGRES_PASSWORD=yourpassword
+export JWT_SECRET=your-super-secret-jwt-key-here-must-be-at-least-32-characters
+export JWT_EXPIRATION=86400000
+
+# Execute a aplicação
+./mvnw spring-boot:run
+```
+
 ## Próximos Passos
 
 1. **Implementar gestão completa de despesas**
@@ -237,3 +211,35 @@ src/main/java/com/sharedexpenses/app/
 4. **Melhorar relatórios**
    - Exportação para PDF/Excel
    - Gráficos de gastos por categoria/período
+
+## Modelagem do Banco de Dados
+
+### Usuário (User)
+- ID, Nome, Email, Hash da Senha, Data de Criação
+
+### Espaço de Despesas (ExpenseSpace)
+- ID, Nome, Criado por User ID
+
+### Participante (ExpenseParticipant)
+- ID, User ID, ExpenseSpace ID, Role (OWNER/ADMIN/MEMBER), Data de Entrada
+
+### Convite (ExpenseSpaceInvite)
+- ID, ExpenseSpace ID, Token único, Criado por User ID, Data de Criação, Data de Expiração, Status
+- Sistema de aprovação com campos: requested_by_user_id, approved_rejected_by_user_id, etc.
+
+### Despesa (Expense) - *Estrutura criada*
+- ID, Descrição, Valor Total, Data, Tipo (Simples/Parcelada/Recorrente), Pago por User ID, Incluir pagador na divisão, ExpenseSpace ID
+
+### Parcela (ExpenseInstallment) - *Estrutura criada*
+- ID, Expense ID, Número da parcela, Data de vencimento, Valor, Status (pago/não pago)
+
+### Despesa Recorrente (RecurringExpense) - *Estrutura criada*
+- ID, Descrição, Valor, Tipo de Recorrência, Data de início/fim, ExpenseSpace ID
+
+## Papéis e Permissões
+
+| Papel   | Permissões |
+|---------|------------|
+| OWNER   | Controle total do grupo, pode remover outros admins |
+| ADMIN   | Convida/remove membros, adiciona despesas, gerencia configurações |
+| MEMBER  | Adiciona despesas, visualiza saldos, participa das divisões |
