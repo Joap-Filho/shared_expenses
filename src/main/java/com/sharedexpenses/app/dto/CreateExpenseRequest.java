@@ -18,7 +18,7 @@ public class CreateExpenseRequest {
     @Positive(message = "Valor deve ser positivo")
     private BigDecimal totalValue;
     
-    @NotNull(message = "Data é obrigatória")
+    // Data é opcional - se não informada, usa data atual
     private LocalDate date;
     
     @NotNull(message = "Tipo de despesa é obrigatório")

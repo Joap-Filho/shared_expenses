@@ -48,11 +48,22 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
   - Interface interativa em `/docs`
   - Documentação completa com exemplos e schemas
 
+- **Gestão Completa de Despesas**
+  - Controller REST para CRUD de despesas (`ExpenseController`)
+  - Service com lógica de negócio e cálculo automático de divisão (`ExpenseService`)
+  - DTOs específicos para requests e responses (`CreateExpenseRequest`, `ExpenseResponse`)
+  - Suporte a despesas simples, parceladas e recorrentes
+  - Divisão automática entre beneficiários com cálculos precisos
+  - Validação de permissões para criar/editar/excluir despesas
+  - Sistema de beneficiários customizáveis (todos do grupo ou específicos)
+
 - **Estrutura de Dados e Banco**
-  - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, etc.)
-  - Migrations com Flyway (v1_create_tables.sql, v2_expense_space_invitation.sql, V3_invite_status_system.sql)
+  - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, Expense, etc.)
+  - Migrations com Flyway (V1 a V7: tabelas, convites, índices de performance)
   - Relacionamentos entre entidades configurados
-  - Sistema de ENUMs para status e tipos
+  - Sistema de ENUMs para status e tipos (ExpenseType: SIMPLE, INSTALLMENT, RECURRING)
+  - Índices otimizados para consultas de alta performance
+  - Constraints de integridade e prevenção de duplicatas
 
 - **Containerização e Deploy**
   - Dockerfile para aplicação Spring Boot
@@ -61,25 +72,19 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
 
 ### 🚧 Em Desenvolvimento/Pendente
 
-- **Gestão de Despesas**
-  - Controller para criação de despesas
-  - Implementação de despesas parceladas
-  - Sistema de despesas recorrentes
-  - Cálculo automático de divisão entre participantes
-
 - **Dashboard e Relatórios**
-  - Cálculo de saldos entre participantes
-  - Histórico de transações
-  - Relatórios de gastos por período
+  - Cálculo de saldos entre participantes (quem deve para quem)
+  - Histórico de transações e resumos financeiros
+  - Relatórios de gastos por período/categoria
+  - Visualizações gráficas de despesas
+
+- **Funcionalidades Avançadas de Despesas**
+  - Categorização de despesas (alimentação, moradia, etc.)
+  - Lembretes de vencimento para parcelas
 
 - **Melhorias do Sistema de Convites**
   - Interface web para aceitar convites
   - Links de convite mais amigáveis
-
-- **Integrações Futuras**
-  - Webhook para Discord
-  - Notificações por email
-  - Exportação para Excel/PDF
 
 ## Tecnologias Utilizadas
 
@@ -124,6 +129,13 @@ A aplicação inclui documentação interativa da API usando Swagger/OpenAPI 3:
 
 ### Espaços de Despesas
 - `POST /api/expense-spaces/create` - Criar novo espaço
+
+### Gestão de Despesas
+- `POST /api/expenses/create` - Criar nova despesa
+- `GET /api/expenses/space/{expenseSpaceId}` - Listar despesas do grupo
+- `GET /api/expenses/{expenseId}` - Obter detalhes de uma despesa
+- `PUT /api/expenses/{expenseId}` - Atualizar despesa existente
+- `DELETE /api/expenses/{expenseId}` - Excluir despesa
 
 ### Convites
 - `POST /api/invites/create` - Criar convite (OWNER/ADMIN apenas)
@@ -195,22 +207,21 @@ export JWT_EXPIRATION=86400000
 
 ## Próximos Passos
 
-1. **Implementar gestão completa de despesas**
-   - Controller para CRUD de despesas
-   - Lógica de divisão automática
-   - Cálculo de saldos
+1. **Implementar dashboard e relatórios financeiros**
+   - Cálculo de saldos entre participantes (quem deve para quem)
+   - Relatórios de gastos por período
+   - Visualizações gráficas
 
-2. **Desenvolver sistema de notificações**
-   - Integração com Discord via webhook
-   - Sistema de alertas para vencimentos
+2. **Funcionalidades avançadas de despesas**
+   - Sistema de categorias
+   - Lembretes de vencimento
 
-3. **Criar interface web**
+3. **Desenvolver sistema de notificações**
+   - Sistema de alertas simples
+
+4. **Criar interface web**
    - Frontend para aceitar convites
    - Dashboard para visualização de gastos
-
-4. **Melhorar relatórios**
-   - Exportação para PDF/Excel
-   - Gráficos de gastos por categoria/período
 
 ## Modelagem do Banco de Dados
 

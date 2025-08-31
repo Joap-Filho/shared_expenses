@@ -60,7 +60,8 @@ public class ExpenseService {
         Expense expense = new Expense();
         expense.setDescription(request.getDescription());
         expense.setTotalValue(request.getTotalValue());
-        expense.setDate(request.getDate());
+        // Se data não informada, usa data atual
+        expense.setDate(request.getDate() != null ? request.getDate() : java.time.LocalDate.now());
         expense.setType(request.getType());
         expense.setPaidBy(paidByUser);
         expense.setIncludePayerInSplit(request.isIncludePayerInSplit());

@@ -23,7 +23,7 @@ public class Expense {
     private BigDecimal totalValue;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private LocalDate date = LocalDate.now();
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
