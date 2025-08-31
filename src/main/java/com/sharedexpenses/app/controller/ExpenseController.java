@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.sharedexpenses.app.dto.CreateExpenseRequest;
 import com.sharedexpenses.app.dto.ExpenseResponse;
+import com.sharedexpenses.app.dto.RecurringExpenseResponse;
 import com.sharedexpenses.app.entity.Expense;
 import com.sharedexpenses.app.service.ExpenseService;
 
@@ -81,5 +82,41 @@ public class ExpenseController {
 
         expenseService.deleteExpense(expenseId, userEmail);
         return ResponseEntity.ok("Despesa removida com sucesso");
+    }
+
+    /**
+     * Gera preview das despesas recorrentes futuras
+     */
+    @GetMapping("/recurring/{recurringId}/preview")
+    public ResponseEntity<List<ExpenseResponse>> previewRecurringExpenses(
+            @PathVariable Long recurringId,
+            Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<ExpenseResponse> futureExpenses = expenseService.previewRecurringExpenses(recurringId, userEmail);
+        return ResponseEntity.ok(futureExpenses);
+    }
+
+    /**
+     * Lista todas as despesas recorrentes do espaço
+     */
+    @GetMapping("/recurring/space/{expenseSpaceId}")
+    public ResponseEntity<List<RecurringExpenseResponse>> getRecurringExpensesBySpace(
+            @PathVariable Long expenseSpaceId,
+            Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<RecurringExpenseResponse> recurringExpenses = expenseService.getRecurringExpensesBySpace(expenseSpaceId, userEmail);
+        return ResponseEntity.ok(recurringExpenses);
+    }
+
+    /**
+     * Gera despesas do mês atual para todas as recorrentes ativas
+     * (Útil para execução via job scheduler)
+     */
+    @PostMapping("/recurring/generate-current-month")
+    public ResponseEntity<List<ExpenseResponse>> generateCurrentMonthRecurringExpenses(
+            Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<ExpenseResponse> generatedExpenses = expenseService.generateCurrentMonthRecurringExpenses(userEmail);
+        return ResponseEntity.ok(generatedExpenses);
     }
 }

@@ -2,6 +2,7 @@ package com.sharedexpenses.app.service;
 
 import com.sharedexpenses.app.dto.CreateExpenseRequest;
 import com.sharedexpenses.app.dto.ExpenseResponse;
+import com.sharedexpenses.app.dto.RecurringExpenseResponse;
 import com.sharedexpenses.app.entity.*;
 import com.sharedexpenses.app.entity.enums.ExpenseType;
 import com.sharedexpenses.app.entity.enums.RoleType;
@@ -14,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -257,6 +261,137 @@ public class ExpenseService {
     }
 
     /**
+     * Gera preview das despesas recorrentes futuras (sem salvar no banco)
+     */
+    @Transactional(readOnly = true)
+    public List<ExpenseResponse> previewRecurringExpenses(Long recurringId, String userEmail) {
+        RecurringExpense recurring = recurringExpenseRepository.findById(recurringId)
+            .orElseThrow(() -> new RuntimeException("Despesa recorrente não encontrada"));
+
+        // Validar se usuário é participante do grupo
+        if (!authorizationService.isUserParticipantOfExpenseSpace(userEmail, recurring.getExpenseSpace().getId())) {
+            throw new RuntimeException("Usuário não é participante deste grupo");
+        }
+
+        List<ExpenseResponse> futureExpenses = new ArrayList<>();
+        LocalDate currentDate = recurring.getStartDate();
+        LocalDate endDate = recurring.getEndDate();
+
+        if (endDate == null) {
+            // Se não tem data fim, gerar apenas próximos 12 meses
+            endDate = currentDate.plusMonths(12);
+        }
+
+        while (!currentDate.isAfter(endDate)) {
+            ExpenseResponse response = createRecurringExpensePreview(recurring, currentDate);
+            futureExpenses.add(response);
+
+            // Avançar para próximo período baseado na recorrência
+            if (recurring.getRecurrence() == RecurrenceType.MONTHLY) {
+                currentDate = currentDate.plusMonths(1);
+            } else if (recurring.getRecurrence() == RecurrenceType.WEEKLY) {
+                currentDate = currentDate.plusWeeks(1);
+            } else if (recurring.getRecurrence() == RecurrenceType.YEARLY) {
+                currentDate = currentDate.plusYears(1);
+            }
+        }
+
+        return futureExpenses;
+    }
+
+    /**
+     * Lista todas as despesas recorrentes do espaço
+     */
+    @Transactional(readOnly = true)
+    public List<RecurringExpenseResponse> getRecurringExpensesBySpace(Long expenseSpaceId, String userEmail) {
+        // Validar se usuário é participante do grupo
+        if (!authorizationService.isUserParticipantOfExpenseSpace(userEmail, expenseSpaceId)) {
+            throw new RuntimeException("Usuário não é participante deste grupo");
+        }
+
+        List<RecurringExpense> recurringExpenses = recurringExpenseRepository.findByExpenseSpaceId(expenseSpaceId);
+        return recurringExpenses.stream()
+            .map(this::convertRecurringToResponse)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Cria preview de uma despesa recorrente para uma data específica
+     */
+    private ExpenseResponse createRecurringExpensePreview(RecurringExpense recurring, LocalDate dueDate) {
+        ExpenseResponse response = new ExpenseResponse();
+        response.setDescription(recurring.getDescription() + " - " + dueDate.format(DateTimeFormatter.ofPattern("MM/yyyy")));
+        response.setTotalValue(recurring.getValue());
+        response.setDate(dueDate);
+        response.setType(ExpenseType.RECURRING);
+        response.setPaidByUserName(recurring.getPaidBy().getName());
+        response.setPaidByUserEmail(recurring.getPaidBy().getEmail());
+        response.setIncludePayerInSplit(recurring.isIncludePayerInSplit());
+        response.setExpenseSpaceId(recurring.getExpenseSpace().getId());
+        response.setExpenseSpaceName(recurring.getExpenseSpace().getName());
+        response.setRecurrenceType(recurring.getRecurrence().toString());
+        response.setEndDate(recurring.getEndDate());
+
+        // Simular divisão entre participantes
+        Set<User> participants = getExpenseSpaceParticipants(recurring.getExpenseSpace());
+        if (!participants.isEmpty()) {
+            response.setTotalParticipants(participants.size());
+            
+            BigDecimal valuePerPerson = recurring.getValue().divide(
+                BigDecimal.valueOf(participants.size()), 
+                2, 
+                RoundingMode.HALF_UP
+            );
+            response.setValuePerPerson(valuePerPerson);
+            response.setTotalValuePerPerson(valuePerPerson);
+
+            List<ExpenseResponse.BeneficiaryInfo> beneficiaryInfos = participants.stream()
+                .map(user -> new ExpenseResponse.BeneficiaryInfo(
+                    user.getId(), 
+                    user.getName(), 
+                    user.getEmail(), 
+                    valuePerPerson
+                ))
+                .collect(Collectors.toList());
+            
+            response.setBeneficiaries(beneficiaryInfos);
+        }
+
+        return response;
+    }
+
+    /**
+     * Converte RecurringExpense para RecurringExpenseResponse
+     */
+    private RecurringExpenseResponse convertRecurringToResponse(RecurringExpense recurring) {
+        return new RecurringExpenseResponse(
+            recurring.getId(),
+            recurring.getDescription(),
+            recurring.getValue(),
+            recurring.getRecurrence().toString(),
+            recurring.getStartDate(),
+            recurring.getEndDate(),
+            recurring.getCreatedAt(),
+            recurring.getPaidBy().getName(),
+            recurring.getPaidBy().getEmail(),
+            recurring.isIncludePayerInSplit(),
+            recurring.getExpenseSpace().getId(),
+            recurring.getExpenseSpace().getName()
+        );
+    }
+
+    /**
+     * Obtém participantes de um expense space
+     */
+    private Set<User> getExpenseSpaceParticipants(ExpenseSpace expenseSpace) {
+        // Buscar todos os participantes do grupo
+        return expenseParticipantRepository.findByExpenseSpaceId(expenseSpace.getId())
+            .stream()
+            .map(ExpenseParticipant::getUser)
+            .collect(Collectors.toSet());
+    }
+
+    /**
      * Verifica se usuário tem permissão de admin
      */
     private boolean hasAdminPermission(String userEmail, Long expenseSpaceId) {
@@ -383,5 +518,74 @@ public class ExpenseService {
             response.setRecurrenceType(recurringExpense.getRecurrence().toString());
             response.setEndDate(recurringExpense.getEndDate());
         }
+    }
+
+    /**
+     * Gera despesas do mês atual para todas as recorrentes ativas
+     */
+    @Transactional
+    public List<ExpenseResponse> generateCurrentMonthRecurringExpenses(String userEmail) {
+        LocalDate currentMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate nextMonth = currentMonth.plusMonths(1);
+
+        // Buscar todas as recorrentes ativas onde o usuário é participante
+        List<RecurringExpense> activeRecurring = recurringExpenseRepository.findAll()
+            .stream()
+            .filter(r -> {
+                // Verificar se está no período ativo
+                boolean isActive = !r.getStartDate().isAfter(currentMonth) &&
+                    (r.getEndDate() == null || !r.getEndDate().isBefore(currentMonth));
+                
+                // Verificar se usuário é participante do grupo
+                boolean isParticipant = authorizationService.isUserParticipantOfExpenseSpace(
+                    userEmail, r.getExpenseSpace().getId());
+                
+                return isActive && isParticipant;
+            })
+            .collect(Collectors.toList());
+
+        List<ExpenseResponse> generatedExpenses = new ArrayList<>();
+
+        for (RecurringExpense recurring : activeRecurring) {
+            // Verificar se já existe despesa deste mês para esta recorrente
+            boolean alreadyExists = expenseRepository.findByExpenseSpaceId(recurring.getExpenseSpace().getId())
+                .stream()
+                .anyMatch(e -> e.getRecurringExpense() != null &&
+                    e.getRecurringExpense().getId().equals(recurring.getId()) &&
+                    e.getDate().isAfter(currentMonth.minusDays(1)) &&
+                    e.getDate().isBefore(nextMonth));
+
+            if (!alreadyExists) {
+                // Criar despesa para este mês
+                Expense newExpense = createExpenseFromRecurring(recurring, currentMonth);
+                Expense savedExpense = expenseRepository.save(newExpense);
+                
+                // Criar beneficiários
+                Set<User> participants = getExpenseSpaceParticipants(recurring.getExpenseSpace());
+                savedExpense.setBeneficiaries(participants);
+                savedExpense = expenseRepository.save(savedExpense);
+                
+                generatedExpenses.add(convertToResponse(savedExpense));
+            }
+        }
+
+        return generatedExpenses;
+    }
+
+    /**
+     * Cria uma despesa baseada em uma configuração recorrente
+     */
+    private Expense createExpenseFromRecurring(RecurringExpense recurring, LocalDate dueDate) {
+        Expense expense = new Expense();
+        expense.setDescription(recurring.getDescription() + " - " + dueDate.format(DateTimeFormatter.ofPattern("MM/yyyy")));
+        expense.setTotalValue(recurring.getValue());
+        expense.setDate(dueDate);
+        expense.setType(ExpenseType.RECURRING);
+        expense.setPaidBy(recurring.getPaidBy());
+        expense.setIncludePayerInSplit(recurring.isIncludePayerInSplit());
+        expense.setExpenseSpace(recurring.getExpenseSpace());
+        expense.setRecurringExpense(recurring);
+        
+        return expense;
     }
 }
