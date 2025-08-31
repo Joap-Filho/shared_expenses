@@ -30,7 +30,7 @@ public class ExpenseSpaceInvite {
 
     // Novos campos para o sistema de aprovação
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "invite_status")
     private InviteStatus status = InviteStatus.PENDING;
 
     @Column(name = "requested_by_user_id")
