@@ -5,6 +5,7 @@ import com.sharedexpenses.app.dto.ExpenseResponse;
 import com.sharedexpenses.app.entity.*;
 import com.sharedexpenses.app.entity.enums.ExpenseType;
 import com.sharedexpenses.app.entity.enums.RoleType;
+import com.sharedexpenses.app.entity.enums.RecurrenceType;
 import com.sharedexpenses.app.repository.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ public class ExpenseService {
 
     @Autowired
     private ExpenseInstallmentRepository expenseInstallmentRepository;
+
+    @Autowired
+    private RecurringExpenseRepository recurringExpenseRepository;
 
     @Autowired
     private AuthorizationService authorizationService;
@@ -77,6 +81,11 @@ public class ExpenseService {
         // Processar tipo específico da despesa
         if (request.getType() == ExpenseType.INSTALLMENT && request.getInstallments() != null) {
             createInstallments(savedExpense, request.getInstallments());
+        } else if (request.getType() == ExpenseType.RECURRING) {
+            // Para despesas recorrentes, criar entrada na tabela recurring_expense
+            RecurringExpense recurringExpense = createRecurringExpense(savedExpense, request);
+            savedExpense.setRecurringExpense(recurringExpense);
+            savedExpense = expenseRepository.save(savedExpense); // Salvar novamente com a referência
         }
 
         return savedExpense;
@@ -223,6 +232,31 @@ public class ExpenseService {
     }
 
     /**
+     * Cria entrada para despesa recorrente
+     */
+    private RecurringExpense createRecurringExpense(Expense expense, CreateExpenseRequest request) {
+        RecurringExpense recurringExpense = new RecurringExpense();
+        recurringExpense.setDescription(expense.getDescription());
+        recurringExpense.setValue(expense.getTotalValue());
+        recurringExpense.setPaidBy(expense.getPaidBy());
+        recurringExpense.setIncludePayerInSplit(expense.isIncludePayerInSplit());
+        recurringExpense.setExpenseSpace(expense.getExpenseSpace());
+        recurringExpense.setStartDate(expense.getDate());
+        
+        // Configurar recorrência
+        if (request.getRecurrenceType() != null) {
+            RecurrenceType recurrenceType = RecurrenceType.valueOf(request.getRecurrenceType());
+            recurringExpense.setRecurrence(recurrenceType);
+        }
+        
+        if (request.getEndDate() != null) {
+            recurringExpense.setEndDate(request.getEndDate());
+        }
+
+        return recurringExpenseRepository.save(recurringExpense);
+    }
+
+    /**
      * Verifica se usuário tem permissão de admin
      */
     private boolean hasAdminPermission(String userEmail, Long expenseSpaceId) {
@@ -300,32 +334,54 @@ public class ExpenseService {
             response.setBeneficiaries(beneficiaryInfos);
         }
 
-        // Adicionar detalhes de parcelas se for despesa parcelada
+        // Adicionar detalhes específicos por tipo
         if (expense.getType() == ExpenseType.INSTALLMENT) {
-            List<ExpenseInstallment> installments = expenseInstallmentRepository
-                .findByExpenseIdOrderByNumber(expense.getId());
-            
-            if (!installments.isEmpty()) {
-                response.setInstallments(installments.size());
-                
-                // Calcular valor por pessoa por parcela
-                BigDecimal installmentValuePerPerson = response.getValuePerPerson();
-                
-                List<ExpenseResponse.InstallmentInfo> installmentInfos = installments.stream()
-                    .map(inst -> new ExpenseResponse.InstallmentInfo(
-                        inst.getId(),
-                        inst.getNumber(),
-                        inst.getDueDate(),
-                        inst.getValue(), // Valor total da parcela
-                        installmentValuePerPerson, // Valor por pessoa desta parcela
-                        inst.isPaid()
-                    ))
-                    .collect(Collectors.toList());
-                
-                response.setInstallmentDetails(installmentInfos);
-            }
+            addInstallmentDetails(response, expense);
+        } else if (expense.getType() == ExpenseType.RECURRING) {
+            addRecurringDetails(response, expense);
         }
 
         return response;
+    }
+
+    /**
+     * Adiciona detalhes de parcelas à resposta
+     */
+    private void addInstallmentDetails(ExpenseResponse response, Expense expense) {
+        List<ExpenseInstallment> installments = expenseInstallmentRepository
+            .findByExpenseIdOrderByNumber(expense.getId());
+        
+        if (!installments.isEmpty()) {
+            response.setInstallments(installments.size());
+            
+            // Calcular valor por pessoa por parcela
+            BigDecimal installmentValuePerPerson = response.getValuePerPerson();
+            
+            List<ExpenseResponse.InstallmentInfo> installmentInfos = installments.stream()
+                .map(inst -> new ExpenseResponse.InstallmentInfo(
+                    inst.getId(),
+                    inst.getNumber(),
+                    inst.getDueDate(),
+                    inst.getValue(), // Valor total da parcela
+                    installmentValuePerPerson, // Valor por pessoa desta parcela
+                    inst.isPaid()
+                ))
+                .collect(Collectors.toList());
+            
+            response.setInstallmentDetails(installmentInfos);
+        }
+    }
+
+    /**
+     * Adiciona detalhes de recorrência à resposta
+     */
+    private void addRecurringDetails(ExpenseResponse response, Expense expense) {
+        // Usar relacionamento direto com recurring_expense
+        RecurringExpense recurringExpense = expense.getRecurringExpense();
+        
+        if (recurringExpense != null) {
+            response.setRecurrenceType(recurringExpense.getRecurrence().toString());
+            response.setEndDate(recurringExpense.getEndDate());
+        }
     }
 }

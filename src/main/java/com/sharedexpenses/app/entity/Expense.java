@@ -42,6 +42,10 @@ public class Expense {
     @JoinColumn(name = "expense_space_id", nullable = false)
     private ExpenseSpace expenseSpace;
 
+    @ManyToOne
+    @JoinColumn(name = "recurring_expense_id")
+    private RecurringExpense recurringExpense;
+
     @ManyToMany
     @JoinTable(
         name = "expense_beneficiary",
@@ -76,6 +80,9 @@ public class Expense {
 
     public ExpenseSpace getExpenseSpace() { return expenseSpace; }
     public void setExpenseSpace(ExpenseSpace expenseSpace) { this.expenseSpace = expenseSpace; }
+
+    public RecurringExpense getRecurringExpense() { return recurringExpense; }
+    public void setRecurringExpense(RecurringExpense recurringExpense) { this.recurringExpense = recurringExpense; }
 
     public Set<User> getBeneficiaries() { return beneficiaries; }
     public void setBeneficiaries(Set<User> beneficiaries) { this.beneficiaries = beneficiaries; }
