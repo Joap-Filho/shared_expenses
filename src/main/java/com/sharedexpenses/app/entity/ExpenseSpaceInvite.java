@@ -3,6 +3,8 @@ package com.sharedexpenses.app.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import com.sharedexpenses.app.entity.enums.InviteStatus;
 
 @Entity
@@ -29,8 +31,8 @@ public class ExpenseSpaceInvite {
     private LocalDateTime expirationDate;
 
     // Novos campos para o sistema de aprovação
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "invite_status")
+    @Column(nullable = false, columnDefinition = "invite_status DEFAULT 'PENDING'::invite_status")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private InviteStatus status = InviteStatus.PENDING;
 
     @Column(name = "requested_by_user_id")
