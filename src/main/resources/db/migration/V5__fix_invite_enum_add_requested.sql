@@ -1,10 +1,16 @@
--- Adicionar valor REQUESTED ao enum invite_status
-ALTER TYPE invite_status ADD VALUE 'REQUESTED';
+-- Verificar se REQUESTED já existe no enum invite_status antes de adicionar
+DO $$ 
+BEGIN
+    -- Tentar adicionar o valor REQUESTED apenas se ele não existir
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'invite_status' AND e.enumlabel = 'REQUESTED'
+    ) THEN
+        ALTER TYPE invite_status ADD VALUE 'REQUESTED';
+    END IF;
+END $$;
 
--- Não é necessário fazer mais nada, pois a V4 anterior já:
--- 1. Converteu status para ENUM
--- 2. Removeu o campo 'used' 
--- 3. Adicionou as constraints
--- 4. Criou os índices
-
--- Esta migration apenas complementa adicionando o valor que estava faltando
+-- Nota: Esta migration foi criada porque inicialmente pensamos que o valor 
+-- REQUESTED não existia, mas a V4 já o havia criado. Esta verificação
+-- garante que a migration seja idempotente.
