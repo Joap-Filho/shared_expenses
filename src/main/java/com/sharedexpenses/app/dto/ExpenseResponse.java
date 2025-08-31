@@ -21,6 +21,7 @@ public class ExpenseResponse {
     private String expenseSpaceName;
     private List<BeneficiaryInfo> beneficiaries;
     private BigDecimal valuePerPerson;
+    private BigDecimal totalValuePerPerson; // Valor total que cada pessoa deve (para parceladas)
     private Integer totalParticipants;
 
     // Para despesas parceladas
@@ -66,6 +67,7 @@ public class ExpenseResponse {
         private Integer number;
         private LocalDate dueDate;
         private BigDecimal value;
+        private BigDecimal valuePerPerson; // Quanto cada pessoa paga desta parcela
         private boolean paid;
 
         public InstallmentInfo() {}
@@ -75,6 +77,15 @@ public class ExpenseResponse {
             this.number = number;
             this.dueDate = dueDate;
             this.value = value;
+            this.paid = paid;
+        }
+
+        public InstallmentInfo(Long id, Integer number, LocalDate dueDate, BigDecimal value, BigDecimal valuePerPerson, boolean paid) {
+            this.id = id;
+            this.number = number;
+            this.dueDate = dueDate;
+            this.value = value;
+            this.valuePerPerson = valuePerPerson;
             this.paid = paid;
         }
 
@@ -93,6 +104,9 @@ public class ExpenseResponse {
 
         public boolean isPaid() { return paid; }
         public void setPaid(boolean paid) { this.paid = paid; }
+
+        public BigDecimal getValuePerPerson() { return valuePerPerson; }
+        public void setValuePerPerson(BigDecimal valuePerPerson) { this.valuePerPerson = valuePerPerson; }
     }
 
     // Constructors
@@ -137,6 +151,9 @@ public class ExpenseResponse {
 
     public BigDecimal getValuePerPerson() { return valuePerPerson; }
     public void setValuePerPerson(BigDecimal valuePerPerson) { this.valuePerPerson = valuePerPerson; }
+
+    public BigDecimal getTotalValuePerPerson() { return totalValuePerPerson; }
+    public void setTotalValuePerPerson(BigDecimal totalValuePerPerson) { this.totalValuePerPerson = totalValuePerPerson; }
 
     public Integer getTotalParticipants() { return totalParticipants; }
     public void setTotalParticipants(Integer totalParticipants) { this.totalParticipants = totalParticipants; }

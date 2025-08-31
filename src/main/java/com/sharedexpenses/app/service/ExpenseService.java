@@ -256,12 +256,36 @@ public class ExpenseService {
         Set<User> beneficiaries = expense.getBeneficiaries();
         if (beneficiaries != null && !beneficiaries.isEmpty()) {
             response.setTotalParticipants(beneficiaries.size());
-            BigDecimal valuePerPerson = expense.getTotalValue().divide(
-                BigDecimal.valueOf(beneficiaries.size()), 
-                2, 
-                RoundingMode.HALF_UP
-            );
-            response.setValuePerPerson(valuePerPerson);
+            
+            if (expense.getType() == ExpenseType.INSTALLMENT) {
+                // Para parceladas: valor por parcela por pessoa
+                List<ExpenseInstallment> installments = expenseInstallmentRepository
+                    .findByExpenseIdOrderByNumber(expense.getId());
+                
+                if (!installments.isEmpty()) {
+                    BigDecimal installmentValuePerPerson = installments.get(0).getValue().divide(
+                        BigDecimal.valueOf(beneficiaries.size()), 
+                        2, 
+                        RoundingMode.HALF_UP
+                    );
+                    response.setValuePerPerson(installmentValuePerPerson); // Por parcela
+                    
+                    // Total por pessoa (valor da parcela × número de parcelas)
+                    BigDecimal totalPerPerson = installmentValuePerPerson.multiply(
+                        BigDecimal.valueOf(installments.size())
+                    );
+                    response.setTotalValuePerPerson(totalPerPerson);
+                }
+            } else {
+                // Para despesas simples: valor total dividido
+                BigDecimal valuePerPerson = expense.getTotalValue().divide(
+                    BigDecimal.valueOf(beneficiaries.size()), 
+                    2, 
+                    RoundingMode.HALF_UP
+                );
+                response.setValuePerPerson(valuePerPerson);
+                response.setTotalValuePerPerson(valuePerPerson); // Mesmo valor para simples
+            }
 
             // Criar lista de beneficiários com valores
             List<ExpenseResponse.BeneficiaryInfo> beneficiaryInfos = beneficiaries.stream()
@@ -269,7 +293,7 @@ public class ExpenseService {
                     user.getId(), 
                     user.getName(), 
                     user.getEmail(), 
-                    valuePerPerson
+                    response.getTotalValuePerPerson() // Total que cada um deve
                 ))
                 .collect(Collectors.toList());
             
@@ -284,12 +308,16 @@ public class ExpenseService {
             if (!installments.isEmpty()) {
                 response.setInstallments(installments.size());
                 
+                // Calcular valor por pessoa por parcela
+                BigDecimal installmentValuePerPerson = response.getValuePerPerson();
+                
                 List<ExpenseResponse.InstallmentInfo> installmentInfos = installments.stream()
                     .map(inst -> new ExpenseResponse.InstallmentInfo(
                         inst.getId(),
                         inst.getNumber(),
                         inst.getDueDate(),
-                        inst.getValue(),
+                        inst.getValue(), // Valor total da parcela
+                        installmentValuePerPerson, // Valor por pessoa desta parcela
                         inst.isPaid()
                     ))
                     .collect(Collectors.toList());
