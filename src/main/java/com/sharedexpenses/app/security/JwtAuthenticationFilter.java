@@ -29,20 +29,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        // Pular filtro para rotas públicas
+        String path = request.getRequestURI();
+        if (path.startsWith("/auth/") || path.startsWith("/docs") || 
+            path.startsWith("/api-docs") || path.startsWith("/swagger-ui")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            if (jwtService.validateToken(token)) {
-                String email = jwtService.getEmailFromToken(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            try {
+                if (jwtService.validateToken(token)) {
+                    String email = jwtService.getEmailFromToken(token);
+                    if (email != null && !email.isEmpty()) {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities());
+                        var authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities());
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+                }
+            } catch (Exception e) {
+                // Log do erro mas não interrompe o fluxo para rotas públicas
+                System.err.println("Erro na autenticação JWT: " + e.getMessage());
             }
         }
 
