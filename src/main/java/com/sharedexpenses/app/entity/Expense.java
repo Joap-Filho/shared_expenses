@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.sharedexpenses.app.entity.enums.ExpenseType;
+import com.sharedexpenses.app.entity.enums.ExpenseStatus;
 
 @Entity
 @Table(name = "expense")
@@ -34,6 +35,10 @@ public class Expense {
 
     @Enumerated(EnumType.STRING)
     private ExpenseType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ExpenseStatus status = ExpenseStatus.PENDING;
 
     @ManyToOne
     @JoinColumn(name = "paid_by_user_id", nullable = false)
@@ -78,6 +83,9 @@ public class Expense {
 
     public ExpenseType getType() { return type; }
     public void setType(ExpenseType type) { this.type = type; }
+
+    public ExpenseStatus getStatus() { return status; }
+    public void setStatus(ExpenseStatus status) { this.status = status; }
 
     public User getPaidBy() { return paidBy; }
     public void setPaidBy(User paidBy) { this.paidBy = paidBy; }

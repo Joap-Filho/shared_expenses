@@ -15,6 +15,7 @@ public class ExpenseResponse {
     private LocalDate date;
     private LocalDateTime createdAt;
     private ExpenseType type;
+    private String status; // Status da despesa: PENDING, PAID, OVERDUE, CANCELLED
     private String paidByUserName;
     private String paidByUserEmail;
     private boolean includePayerInSplit;
@@ -135,6 +136,9 @@ public class ExpenseResponse {
 
     public ExpenseType getType() { return type; }
     public void setType(ExpenseType type) { this.type = type; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public String getPaidByUserName() { return paidByUserName; }
     public void setPaidByUserName(String paidByUserName) { this.paidByUserName = paidByUserName; }

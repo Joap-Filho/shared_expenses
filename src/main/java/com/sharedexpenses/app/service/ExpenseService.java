@@ -4,6 +4,7 @@ import com.sharedexpenses.app.dto.CreateExpenseRequest;
 import com.sharedexpenses.app.dto.ExpenseResponse;
 import com.sharedexpenses.app.dto.RecurringExpenseResponse;
 import com.sharedexpenses.app.entity.*;
+import com.sharedexpenses.app.entity.enums.ExpenseStatus;
 import com.sharedexpenses.app.entity.enums.ExpenseType;
 import com.sharedexpenses.app.entity.enums.RoleType;
 import com.sharedexpenses.app.entity.enums.RecurrenceType;
@@ -222,6 +223,46 @@ public class ExpenseService {
     }
 
     /**
+     * Atualiza o status de uma despesa
+     */
+    public Expense updateExpenseStatus(Long expenseId, String status, String userEmail) {
+        Expense expense = expenseRepository.findById(expenseId)
+            .orElseThrow(() -> new RuntimeException("Despesa não encontrada"));
+
+        // Validar se usuário é participante do grupo
+        if (!authorizationService.isUserParticipantOfExpenseSpace(userEmail, expense.getExpenseSpace().getId())) {
+            throw new RuntimeException("Usuário não é participante deste grupo");
+        }
+
+        // Validar status
+        ExpenseStatus expenseStatus;
+        try {
+            expenseStatus = ExpenseStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Status inválido. Valores aceitos: PENDING, PAID, OVERDUE, CANCELLED");
+        }
+
+        expense.setStatus(expenseStatus);
+        return expenseRepository.save(expense);
+    }
+
+    /**
+     * Atualiza o status de pagamento de uma parcela
+     */
+    public ExpenseInstallment updateInstallmentStatus(Long installmentId, boolean paid, String userEmail) {
+        ExpenseInstallment installment = expenseInstallmentRepository.findById(installmentId)
+            .orElseThrow(() -> new RuntimeException("Parcela não encontrada"));
+
+        // Validar se usuário é participante do grupo
+        if (!authorizationService.isUserParticipantOfExpenseSpace(userEmail, installment.getExpense().getExpenseSpace().getId())) {
+            throw new RuntimeException("Usuário não é participante deste grupo");
+        }
+
+        installment.setPaid(paid);
+        return expenseInstallmentRepository.save(installment);
+    }
+
+    /**
      * Remove uma despesa
      */
     /**
@@ -408,6 +449,7 @@ public class ExpenseService {
         response.setDate(expense.getDate());
         response.setCreatedAt(expense.getCreatedAt());
         response.setType(expense.getType());
+        response.setStatus(expense.getStatus().toString());
         response.setPaidByUserName(expense.getPaidBy().getName());
         response.setPaidByUserEmail(expense.getPaidBy().getEmail());
         response.setIncludePayerInSplit(expense.isIncludePayerInSplit());

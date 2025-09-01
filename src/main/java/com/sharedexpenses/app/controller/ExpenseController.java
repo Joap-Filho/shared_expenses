@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import com.sharedexpenses.app.dto.CreateExpenseRequest;
 import com.sharedexpenses.app.dto.ExpenseResponse;
 import com.sharedexpenses.app.dto.RecurringExpenseResponse;
+import com.sharedexpenses.app.dto.UpdateExpenseStatusRequest;
+import com.sharedexpenses.app.dto.UpdateInstallmentStatusRequest;
 import com.sharedexpenses.app.entity.Expense;
 import com.sharedexpenses.app.service.ExpenseService;
 
@@ -106,5 +108,39 @@ public class ExpenseController {
         String userEmail = authentication.getName();
         expenseService.deleteRecurringExpense(recurringId, userEmail);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Atualiza o status de uma despesa
+     */
+    @PutMapping("/{expenseId}/status")
+    @Operation(summary = "Atualizar status da despesa", description = "Atualiza o status de pagamento de uma despesa (PENDING, PAID, OVERDUE, CANCELLED)")
+    public ResponseEntity<ExpenseResponse> updateExpenseStatus(
+            @PathVariable Long expenseId,
+            @Valid @RequestBody UpdateExpenseStatusRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        Expense expense = expenseService.updateExpenseStatus(expenseId, request.getStatus(), userEmail);
+        ExpenseResponse response = expenseService.convertToResponse(expense);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Atualiza o status de pagamento de uma parcela
+     */
+    @PutMapping("/installments/{installmentId}/status")
+    @Operation(summary = "Atualizar status de parcela", description = "Marca uma parcela como paga ou não paga")
+    public ResponseEntity<String> updateInstallmentStatus(
+            @PathVariable Long installmentId,
+            @Valid @RequestBody UpdateInstallmentStatusRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
+        expenseService.updateInstallmentStatus(installmentId, request.getPaid(), userEmail);
+        
+        String message = request.getPaid() ? "Parcela marcada como paga" : "Parcela marcada como não paga";
+        return ResponseEntity.ok(message);
     }
 }
