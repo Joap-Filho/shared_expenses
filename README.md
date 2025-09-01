@@ -64,11 +64,25 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
   - Breakdown detalhado mostrando como chegou ao saldo final
   - **Exemplo:** Maria deve R$100 para João, João deve R$30 para Maria → Saldo: Maria deve R$70 para João
 
+- **Sistema de Status de Despesas** ⭐ **NOVO**
+  - Controle de status: PENDING, PAID, OVERDUE, CANCELLED
+  - Atualização automática para OVERDUE quando apropriado
+  - Endpoints para alterar status individual de despesas e parcelas
+  - Rastreamento do ciclo de vida das despesas
+
+- **Sistema de Cartões de Crédito** ⭐ **NOVO**
+  - Criação e gestão de cartões vinculados a espaços de despesas (`CardService`)
+  - Cada cartão possui nome, descrição, dia de vencimento e proprietário
+  - Vinculação opcional de despesas a cartões específicos
+  - CRUD completo com validações de propriedade e unicidade por espaço
+  - Controle de acesso: apenas proprietário pode editar/excluir seus cartões
+  - Sistema totalmente retrocompatível - despesas existentes não são afetadas
+
 - **Estrutura de Dados e Banco**
-  - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, Expense, etc.)
-  - Migrations com Flyway (V1 a V7: tabelas, convites, índices de performance)
+  - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, Expense, Card, etc.)
+  - Migrations com Flyway (V1 a V11: tabelas, convites, status, cartões, índices de performance)
   - Relacionamentos entre entidades configurados
-  - Sistema de ENUMs para status e tipos (ExpenseType: SIMPLE, INSTALLMENT, RECURRING)
+  - Sistema de ENUMs para status e tipos (ExpenseType: SIMPLE, INSTALLMENT, RECURRING; ExpenseStatus: PENDING, PAID, OVERDUE, CANCELLED)
   - Índices otimizados para consultas de alta performance
   - Constraints de integridade e prevenção de duplicatas
 
@@ -80,14 +94,20 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
 ### 🚧 Em Desenvolvimento/Pendente
 
 - **Dashboard e Relatórios**
-  - Cálculo de saldos entre participantes (quem deve para quem)
-  - Histórico de transações e resumos financeiros
   - Relatórios de gastos por período/categoria
   - Visualizações gráficas de despesas
+  - **Relatórios por cartão** - Gastos mensais, limites, vencimentos
+  - **Dashboard de cartões** - Painel com informações consolidadas por cartão
 
 - **Funcionalidades Avançadas de Despesas**
   - Categorização de despesas (alimentação, moradia, etc.)
   - Lembretes de vencimento para parcelas
+  - **Filtros por cartão** - Buscar despesas vinculadas a cartões específicos
+
+- **Melhorias do Sistema de Cartões**
+  - Notificações de vencimento de faturas
+  - Sistema de limites de gastos por cartão
+  - Relatórios de fatura por período
 
 - **Melhorias do Sistema de Convites**
   - Interface web para aceitar convites
@@ -138,14 +158,24 @@ A aplicação inclui documentação interativa da API usando Swagger/OpenAPI 3:
 - `POST /api/expense-spaces/create` - Criar novo espaço
 
 ### Gestão de Despesas
-- `POST /api/expenses/create` - Criar nova despesa
+- `POST /api/expenses/create` - Criar nova despesa (com campo opcional `cardId`)
 - `GET /api/expenses/space/{expenseSpaceId}` - Listar despesas do grupo
 - `GET /api/expenses/{expenseId}` - Obter detalhes de uma despesa
 - `PUT /api/expenses/{expenseId}` - Atualizar despesa existente
 - `DELETE /api/expenses/{expenseId}` - Excluir despesa
+- `PUT /api/expenses/{expenseId}/status` - Atualizar status de despesa (PENDING, PAID, OVERDUE, CANCELLED)
+- `PUT /api/expenses/{expenseId}/installments/{installmentId}/status` - Atualizar status de parcela específica
 
 ### Cálculo de Saldos ⭐ **NOVO**
 - `GET /api/expenses/balances/space/{expenseSpaceId}` - Calcular saldos líquidos entre usuários
+
+### Gestão de Cartões ⭐ **NOVO**
+- `POST /api/cards/space/{expenseSpaceId}` - Criar novo cartão de crédito
+- `GET /api/cards/space/{expenseSpaceId}` - Listar todos os cartões do espaço
+- `GET /api/cards/space/{expenseSpaceId}/my-cards` - Listar apenas meus cartões
+- `GET /api/cards/{cardId}` - Obter detalhes de um cartão
+- `PUT /api/cards/{cardId}` - Atualizar cartão (apenas proprietário)
+- `DELETE /api/cards/{cardId}` - Excluir cartão (apenas proprietário)
 
 ### Convites
 - `POST /api/invites/create` - Criar convite (OWNER/ADMIN apenas)
@@ -217,21 +247,71 @@ export JWT_EXPIRATION=86400000
 
 ## Próximos Passos
 
-1. **Implementar dashboard e relatórios financeiros**
+1. **Implementar relatórios e filtros para cartões**
+   - Relatórios de gastos por cartão: `GET /api/cards/{id}/expenses?month=2025-09`
+   - Filtros na listagem de despesas: `GET /api/expenses/space/{id}?cardId=5`
+   - Analytics por cartão: `GET /api/cards/{id}/analytics/monthly`
+
+2. **Expandir funcionalidades de cartões**
+   - Sistema de limites de gastos por cartão
+   - Notificações de vencimento de faturas
+   - Dashboard consolidado de todos os cartões
+
+3. **Implementar dashboard e relatórios financeiros**
    - Relatórios de gastos por período
    - Visualizações gráficas (dados estruturados para Chart.js/ApexCharts)
    - Analytics: `GET /api/expenses/analytics/monthly/{id}`, `/analytics/by-category/{id}`
 
-2. **Funcionalidades avançadas de despesas**
+4. **Funcionalidades avançadas de despesas**
    - Sistema de categorias
    - Lembretes de vencimento
 
-3. **Desenvolver sistema de notificações**
+5. **Desenvolver sistema de notificações**
    - Sistema de alertas simples
 
-4. **Criar interface web**
+6. **Criar interface web**
    - Frontend para aceitar convites
    - Dashboard para visualização de gastos
+
+## Exemplos de Uso
+
+### 1. Criando um Cartão de Crédito
+```bash
+POST /api/cards/space/1
+Content-Type: application/json
+Authorization: Bearer <seu-token>
+
+{
+  "name": "Cartão Nubank Roxinho",
+  "description": "Cartão principal para gastos da casa",
+  "dueDay": 10
+}
+```
+
+### 2. Criando Despesa Vinculada a Cartão
+```bash
+POST /api/expenses/create
+Content-Type: application/json
+Authorization: Bearer <seu-token>
+
+{
+  "title": "Supermercado",
+  "description": "Compras da semana",
+  "totalValue": 250.50,
+  "date": "2025-09-01",
+  "type": "SIMPLE",
+  "expenseSpaceId": 1,
+  "cardId": 5
+}
+```
+
+### 3. Visualizando Saldos do Grupo
+```bash
+GET /api/expenses/balances/space/1
+Authorization: Bearer <seu-token>
+
+# Resposta mostra quem deve para quem, com valores líquidos
+```
 
 ## Modelagem do Banco de Dados
 
@@ -249,10 +329,13 @@ export JWT_EXPIRATION=86400000
 - Sistema de aprovação com campos: requested_by_user_id, approved_rejected_by_user_id, etc.
 
 ### Despesa (Expense) - *Estrutura criada*
-- ID, Descrição, Valor Total, Data, Tipo (Simples/Parcelada/Recorrente), Pago por User ID, Incluir pagador na divisão, ExpenseSpace ID
+- ID, Título, Descrição, Valor Total, Data, Tipo (Simples/Parcelada/Recorrente), Status (PENDING/PAID/OVERDUE/CANCELLED), Pago por User ID, Incluir pagador na divisão, ExpenseSpace ID, Card ID (opcional)
+
+### Cartão (Card) - *Estrutura criada* ⭐ **NOVO**
+- ID, Nome, Descrição, Dia de Vencimento (1-31), Proprietário (User ID), ExpenseSpace ID, Data de Criação/Atualização
 
 ### Parcela (ExpenseInstallment) - *Estrutura criada*
-- ID, Expense ID, Número da parcela, Data de vencimento, Valor, Status (pago/não pago)
+- ID, Expense ID, Número da parcela, Data de vencimento, Valor, Status (PENDING/PAID/OVERDUE/CANCELLED)
 
 ### Despesa Recorrente (RecurringExpense) - *Estrutura criada*
 - ID, Descrição, Valor, Tipo de Recorrência, Data de início/fim, ExpenseSpace ID

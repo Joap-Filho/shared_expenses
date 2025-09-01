@@ -49,6 +49,9 @@ public class ExpenseService {
     private RecurringExpenseRepository recurringExpenseRepository;
 
     @Autowired
+    private CardRepository cardRepository;
+
+    @Autowired
     private AuthorizationService authorizationService;
 
     /**
@@ -78,6 +81,13 @@ public class ExpenseService {
         expense.setPaidBy(paidByUser);
         expense.setIncludePayerInSplit(request.isIncludePayerInSplit());
         expense.setExpenseSpace(expenseSpace);
+
+        // Associar cartão se fornecido
+        if (request.getCardId() != null) {
+            Card card = cardRepository.findByIdAndExpenseSpaceId(request.getCardId(), request.getExpenseSpaceId())
+                    .orElseThrow(() -> new RuntimeException("Cartão não encontrado neste espaço"));
+            expense.setCard(card);
+        }
 
         // Definir beneficiários
         Set<User> beneficiaries = determineBeneficiaries(request, expenseSpace);
@@ -455,6 +465,12 @@ public class ExpenseService {
         response.setIncludePayerInSplit(expense.isIncludePayerInSplit());
         response.setExpenseSpaceId(expense.getExpenseSpace().getId());
         response.setExpenseSpaceName(expense.getExpenseSpace().getName());
+
+        // Adicionar informações do cartão se vinculado
+        if (expense.getCard() != null) {
+            response.setCardId(expense.getCard().getId());
+            response.setCardName(expense.getCard().getName());
+        }
 
         // Calcular divisão
         Set<User> beneficiaries = expense.getBeneficiaries();

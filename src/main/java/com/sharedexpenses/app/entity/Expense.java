@@ -55,6 +55,10 @@ public class Expense {
     @JoinColumn(name = "recurring_expense_id")
     private RecurringExpense recurringExpense;
 
+    @ManyToOne
+    @JoinColumn(name = "card_id")
+    private Card card; // Cartão associado à despesa (opcional)
+
     @ManyToMany
     @JoinTable(
         name = "expense_beneficiary",
@@ -98,6 +102,9 @@ public class Expense {
 
     public RecurringExpense getRecurringExpense() { return recurringExpense; }
     public void setRecurringExpense(RecurringExpense recurringExpense) { this.recurringExpense = recurringExpense; }
+
+    public Card getCard() { return card; }
+    public void setCard(Card card) { this.card = card; }
 
     public Set<User> getBeneficiaries() { return beneficiaries; }
     public void setBeneficiaries(Set<User> beneficiaries) { this.beneficiaries = beneficiaries; }

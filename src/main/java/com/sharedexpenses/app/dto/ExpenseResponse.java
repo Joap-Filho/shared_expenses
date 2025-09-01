@@ -35,6 +35,10 @@ public class ExpenseResponse {
     private LocalDate endDate;
     private Long recurringExpenseId;
 
+    // Cartão de crédito vinculado (opcional)
+    private Long cardId;
+    private String cardName;
+
     // Nested classes para informações detalhadas
     public static class BeneficiaryInfo {
         private Long userId;
@@ -181,4 +185,10 @@ public class ExpenseResponse {
 
     public Long getRecurringExpenseId() { return recurringExpenseId; }
     public void setRecurringExpenseId(Long recurringExpenseId) { this.recurringExpenseId = recurringExpenseId; }
+
+    public Long getCardId() { return cardId; }
+    public void setCardId(Long cardId) { this.cardId = cardId; }
+
+    public String getCardName() { return cardName; }
+    public void setCardName(String cardName) { this.cardName = cardName; }
 }

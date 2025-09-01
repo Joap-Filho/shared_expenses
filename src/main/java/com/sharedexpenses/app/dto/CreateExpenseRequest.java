@@ -41,6 +41,9 @@ public class CreateExpenseRequest {
     private String recurrenceType; // MONTHLY, YEARLY, WEEKLY, DAILY
     private LocalDate endDate;
 
+    // Cartão de crédito vinculado (opcional)
+    private Long cardId;
+
     // Constructors
     public CreateExpenseRequest() {}
 
@@ -87,4 +90,7 @@ public class CreateExpenseRequest {
 
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+
+    public Long getCardId() { return cardId; }
+    public void setCardId(Long cardId) { this.cardId = cardId; }
 }
