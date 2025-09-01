@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public class RecurringExpenseResponse {
     private Long id;
+    private String title;
     private String description;
     private BigDecimal value;
     private String recurrenceType;
@@ -21,11 +22,12 @@ public class RecurringExpenseResponse {
     // Constructors
     public RecurringExpenseResponse() {}
 
-    public RecurringExpenseResponse(Long id, String description, BigDecimal value, String recurrenceType,
+    public RecurringExpenseResponse(Long id, String title, String description, BigDecimal value, String recurrenceType,
                                   LocalDate startDate, LocalDate endDate, LocalDateTime createdAt,
                                   String paidByUserName, String paidByUserEmail, boolean includePayerInSplit,
                                   Long expenseSpaceId, String expenseSpaceName) {
         this.id = id;
+        this.title = title;
         this.description = description;
         this.value = value;
         this.recurrenceType = recurrenceType;
@@ -42,6 +44,9 @@ public class RecurringExpenseResponse {
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

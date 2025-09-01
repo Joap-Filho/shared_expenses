@@ -11,7 +11,9 @@ import java.util.List;
 
 public class CreateExpenseRequest {
     
-    @NotBlank(message = "Descrição é obrigatória")
+    @NotBlank(message = "Título é obrigatório")
+    private String title;
+    
     private String description;
     
     @NotNull(message = "Valor total é obrigatório")
@@ -42,8 +44,9 @@ public class CreateExpenseRequest {
     // Constructors
     public CreateExpenseRequest() {}
 
-    public CreateExpenseRequest(String description, BigDecimal totalValue, LocalDate date, 
+    public CreateExpenseRequest(String title, String description, BigDecimal totalValue, LocalDate date, 
                               ExpenseType type, Long expenseSpaceId) {
+        this.title = title;
         this.description = description;
         this.totalValue = totalValue;
         this.date = date;
@@ -52,6 +55,9 @@ public class CreateExpenseRequest {
     }
 
     // Getters and Setters
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 

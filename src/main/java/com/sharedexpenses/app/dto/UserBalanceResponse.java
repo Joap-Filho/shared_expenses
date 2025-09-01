@@ -19,7 +19,7 @@ public class UserBalanceResponse {
         
         public static class ExpenseBreakdown {
             private Long expenseId;
-            private String description;
+            private String title;
             private String date;
             private String paidBy;
             private BigDecimal amount;
@@ -27,10 +27,10 @@ public class UserBalanceResponse {
             
             public ExpenseBreakdown() {}
             
-            public ExpenseBreakdown(Long expenseId, String description, String date, 
+            public ExpenseBreakdown(Long expenseId, String title, String date, 
                                    String paidBy, BigDecimal amount, String direction) {
                 this.expenseId = expenseId;
-                this.description = description;
+                this.title = title;
                 this.date = date;
                 this.paidBy = paidBy;
                 this.amount = amount;
@@ -41,8 +41,8 @@ public class UserBalanceResponse {
             public Long getExpenseId() { return expenseId; }
             public void setExpenseId(Long expenseId) { this.expenseId = expenseId; }
             
-            public String getDescription() { return description; }
-            public void setDescription(String description) { this.description = description; }
+            public String getTitle() { return title; }
+            public void setTitle(String title) { this.title = title; }
             
             public String getDate() { return date; }
             public void setDate(String date) { this.date = date; }

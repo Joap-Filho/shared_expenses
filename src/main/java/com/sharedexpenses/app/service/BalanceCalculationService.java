@@ -183,7 +183,7 @@ public class BalanceCalculationService {
             for (ExpenseBreakdown expense : toDebt.getBreakdown()) {
                 ExpenseBreakdown creditExpense = new ExpenseBreakdown(
                     expense.getExpenseId(),
-                    expense.getDescription(),
+                    expense.getTitle(), // Usando title ao invés de description
                     expense.getDate(),
                     expense.getPaidBy(),
                     expense.getAmount(),
@@ -243,7 +243,7 @@ public class BalanceCalculationService {
         public void addExpenseBreakdown(Expense expense, BigDecimal amount, String direction) {
             ExpenseBreakdown expenseBreakdown = new ExpenseBreakdown(
                 expense.getId(),
-                expense.getDescription(),
+                expense.getTitle(),
                 expense.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 expense.getPaidBy().getName(),
                 amount,

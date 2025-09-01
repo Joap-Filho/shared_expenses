@@ -68,6 +68,7 @@ public class ExpenseService {
 
         // Criar despesa
         Expense expense = new Expense();
+        expense.setTitle(request.getTitle());
         expense.setDescription(request.getDescription());
         expense.setTotalValue(request.getTotalValue());
         // Se data não informada, usa data atual
@@ -202,6 +203,7 @@ public class ExpenseService {
         }
 
         // Atualizar campos
+        expense.setTitle(request.getTitle());
         expense.setDescription(request.getDescription());
         expense.setTotalValue(request.getTotalValue());
         
@@ -269,6 +271,7 @@ public class ExpenseService {
         
         // Criar configuração recorrente para manter informações
         RecurringExpense recurringExpense = new RecurringExpense();
+        recurringExpense.setTitle(request.getTitle());
         recurringExpense.setDescription(request.getDescription());
         recurringExpense.setValue(request.getTotalValue());
         recurringExpense.setRecurrence(RecurrenceType.valueOf(request.getRecurrenceType()));
@@ -292,7 +295,8 @@ public class ExpenseService {
         // Criar uma despesa para cada data futura
         for (LocalDate futureDate : futureDates) {
             Expense recurringExpense2 = new Expense();
-            recurringExpense2.setDescription(request.getDescription() + " - " + futureDate.format(DateTimeFormatter.ofPattern("MM/yyyy")));
+            recurringExpense2.setTitle(request.getTitle() + " - " + futureDate.format(DateTimeFormatter.ofPattern("MM/yyyy")));
+            recurringExpense2.setDescription(request.getDescription());
             recurringExpense2.setTotalValue(request.getTotalValue());
             recurringExpense2.setDate(futureDate);
             recurringExpense2.setType(ExpenseType.RECURRING);
@@ -364,6 +368,7 @@ public class ExpenseService {
     private RecurringExpenseResponse convertRecurringToResponse(RecurringExpense recurring) {
         return new RecurringExpenseResponse(
             recurring.getId(),
+            recurring.getTitle(),
             recurring.getDescription(),
             recurring.getValue(),
             recurring.getRecurrence().toString(),
@@ -376,17 +381,6 @@ public class ExpenseService {
             recurring.getExpenseSpace().getId(),
             recurring.getExpenseSpace().getName()
         );
-    }
-
-    /**
-     * Obtém participantes de um expense space
-     */
-    private Set<User> getExpenseSpaceParticipants(ExpenseSpace expenseSpace) {
-        // Buscar todos os participantes do grupo
-        return expenseParticipantRepository.findByExpenseSpaceId(expenseSpace.getId())
-            .stream()
-            .map(ExpenseParticipant::getUser)
-            .collect(Collectors.toSet());
     }
 
     /**
@@ -408,6 +402,7 @@ public class ExpenseService {
         ExpenseResponse response = new ExpenseResponse();
         
         response.setId(expense.getId());
+        response.setTitle(expense.getTitle());
         response.setDescription(expense.getDescription());
         response.setTotalValue(expense.getTotalValue());
         response.setDate(expense.getDate());
@@ -570,6 +565,7 @@ public class ExpenseService {
         for (RecurringExpense recurring : allRecurring) {
             Map<String, Object> info = new HashMap<>();
             info.put("recurringId", recurring.getId());
+            info.put("title", recurring.getTitle());
             info.put("description", recurring.getDescription());
             info.put("startDate", recurring.getStartDate());
             info.put("endDate", recurring.getEndDate());
