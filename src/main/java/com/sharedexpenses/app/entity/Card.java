@@ -30,7 +30,7 @@ public class Card {
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "owner_user_id", nullable = false)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner; // Dono do cartão
 
     @ManyToOne
