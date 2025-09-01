@@ -25,13 +25,20 @@ public class CreateCardRequest {
     @Max(value = 31, message = "Dia de vencimento deve ser entre 1 e 31")
     private Integer dueDay;
     
+    @Schema(description = "Dia de fechamento da fatura (1-31)", example = "25")
+    @NotNull(message = "Dia de fechamento é obrigatório")
+    @Min(value = 1, message = "Dia de fechamento deve ser entre 1 e 31")
+    @Max(value = 31, message = "Dia de fechamento deve ser entre 1 e 31")
+    private Integer closingDay;
+    
     // Constructors
     public CreateCardRequest() {}
     
-    public CreateCardRequest(String name, String description, Integer dueDay) {
+    public CreateCardRequest(String name, String description, Integer dueDay, Integer closingDay) {
         this.name = name;
         this.description = description;
         this.dueDay = dueDay;
+        this.closingDay = closingDay;
     }
     
     // Getters and Setters
@@ -57,5 +64,13 @@ public class CreateCardRequest {
     
     public void setDueDay(Integer dueDay) {
         this.dueDay = dueDay;
+    }
+    
+    public Integer getClosingDay() {
+        return closingDay;
+    }
+    
+    public void setClosingDay(Integer closingDay) {
+        this.closingDay = closingDay;
     }
 }

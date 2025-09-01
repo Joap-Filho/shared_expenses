@@ -52,6 +52,9 @@ public class ExpenseService {
     private CardRepository cardRepository;
 
     @Autowired
+    private CardBillService cardBillService;
+
+    @Autowired
     private AuthorizationService authorizationService;
 
     /**
@@ -87,6 +90,13 @@ public class ExpenseService {
             Card card = cardRepository.findByIdAndExpenseSpaceId(request.getCardId(), request.getExpenseSpaceId())
                     .orElseThrow(() -> new RuntimeException("Cartão não encontrado neste espaço"));
             expense.setCard(card);
+            
+            // Calcular período da fatura e data de vencimento
+            Object[] billInfo = cardBillService.calculateBillInfo(expense.getDate(), card);
+            if (billInfo != null) {
+                expense.setBillPeriod((String) billInfo[0]);
+                expense.setBillDueDate((LocalDate) billInfo[1]);
+            }
         }
 
         // Definir beneficiários
@@ -470,6 +480,8 @@ public class ExpenseService {
         if (expense.getCard() != null) {
             response.setCardId(expense.getCard().getId());
             response.setCardName(expense.getCard().getName());
+            response.setBillPeriod(expense.getBillPeriod());
+            response.setBillDueDate(expense.getBillDueDate());
         }
 
         // Calcular divisão

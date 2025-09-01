@@ -18,6 +18,9 @@ public class CardResponse {
     @Schema(description = "Dia de vencimento da fatura", example = "10")
     private Integer dueDay;
     
+    @Schema(description = "Dia de fechamento da fatura", example = "25")
+    private Integer closingDay;
+    
     @Schema(description = "ID do proprietário do cartão", example = "2")
     private Long ownerId;
     
@@ -39,13 +42,14 @@ public class CardResponse {
     // Constructors
     public CardResponse() {}
     
-    public CardResponse(Long id, String name, String description, Integer dueDay, 
+    public CardResponse(Long id, String name, String description, Integer dueDay, Integer closingDay,
                        Long ownerId, String ownerName, Long expenseSpaceId, 
                        String expenseSpaceName, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.dueDay = dueDay;
+        this.closingDay = closingDay;
         this.ownerId = ownerId;
         this.ownerName = ownerName;
         this.expenseSpaceId = expenseSpaceId;
@@ -85,6 +89,14 @@ public class CardResponse {
     
     public void setDueDay(Integer dueDay) {
         this.dueDay = dueDay;
+    }
+    
+    public Integer getClosingDay() {
+        return closingDay;
+    }
+    
+    public void setClosingDay(Integer closingDay) {
+        this.closingDay = closingDay;
     }
     
     public Long getOwnerId() {

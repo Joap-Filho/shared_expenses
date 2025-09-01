@@ -59,6 +59,7 @@ public class CardService {
         card.setName(request.getName());
         card.setDescription(request.getDescription());
         card.setDueDay(request.getDueDay());
+        card.setClosingDay(request.getClosingDay());
         card.setOwner(user);
         card.setExpenseSpace(expenseSpace);
         card.setCreatedAt(LocalDateTime.now());
@@ -149,6 +150,9 @@ public class CardService {
         if (request.getDueDay() != null) {
             card.setDueDay(request.getDueDay());
         }
+        if (request.getClosingDay() != null) {
+            card.setClosingDay(request.getClosingDay());
+        }
         
         card.setUpdatedAt(LocalDateTime.now());
         Card updatedCard = cardRepository.save(card);
@@ -183,6 +187,7 @@ public class CardService {
                 card.getName(),
                 card.getDescription(),
                 card.getDueDay(),
+                card.getClosingDay(),
                 card.getOwner().getId(),
                 card.getOwner().getName(),
                 card.getExpenseSpace().getId(),

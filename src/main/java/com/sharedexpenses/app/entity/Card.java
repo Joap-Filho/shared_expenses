@@ -20,6 +20,9 @@ public class Card {
     @Column(name = "due_day", nullable = false)
     private Integer dueDay; // Dia do vencimento (1-31)
 
+    @Column(name = "closing_day", nullable = false)
+    private Integer closingDay; // Dia de fechamento da fatura (1-31)
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -57,6 +60,9 @@ public class Card {
 
     public Integer getDueDay() { return dueDay; }
     public void setDueDay(Integer dueDay) { this.dueDay = dueDay; }
+
+    public Integer getClosingDay() { return closingDay; }
+    public void setClosingDay(Integer closingDay) { this.closingDay = closingDay; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

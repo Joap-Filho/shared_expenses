@@ -38,6 +38,8 @@ public class ExpenseResponse {
     // Cartão de crédito vinculado (opcional)
     private Long cardId;
     private String cardName;
+    private String billPeriod; // Período da fatura (YYYY-MM)
+    private LocalDate billDueDate; // Data de vencimento da fatura
 
     // Nested classes para informações detalhadas
     public static class BeneficiaryInfo {
@@ -191,4 +193,10 @@ public class ExpenseResponse {
 
     public String getCardName() { return cardName; }
     public void setCardName(String cardName) { this.cardName = cardName; }
+
+    public String getBillPeriod() { return billPeriod; }
+    public void setBillPeriod(String billPeriod) { this.billPeriod = billPeriod; }
+
+    public LocalDate getBillDueDate() { return billDueDate; }
+    public void setBillDueDate(LocalDate billDueDate) { this.billDueDate = billDueDate; }
 }

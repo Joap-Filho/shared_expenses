@@ -59,6 +59,12 @@ public class Expense {
     @JoinColumn(name = "card_id")
     private Card card; // Cartão associado à despesa (opcional)
 
+    @Column(name = "bill_due_date")
+    private LocalDate billDueDate; // Data de vencimento da fatura (quando vinculada a cartão)
+
+    @Column(name = "bill_period")
+    private String billPeriod; // Período da fatura no formato "YYYY-MM" (ex: "2025-09")
+
     @ManyToMany
     @JoinTable(
         name = "expense_beneficiary",
@@ -105,6 +111,12 @@ public class Expense {
 
     public Card getCard() { return card; }
     public void setCard(Card card) { this.card = card; }
+
+    public LocalDate getBillDueDate() { return billDueDate; }
+    public void setBillDueDate(LocalDate billDueDate) { this.billDueDate = billDueDate; }
+
+    public String getBillPeriod() { return billPeriod; }
+    public void setBillPeriod(String billPeriod) { this.billPeriod = billPeriod; }
 
     public Set<User> getBeneficiaries() { return beneficiaries; }
     public void setBeneficiaries(Set<User> beneficiaries) { this.beneficiaries = beneficiaries; }
