@@ -57,6 +57,13 @@ Simplificar o controle de despesas entre pessoas que dividem contas, automatizan
   - Validação de permissões para criar/editar/excluir despesas
   - Sistema de beneficiários customizáveis (todos do grupo ou específicos)
 
+- **Sistema de Saldos Dinâmicos** ⭐ **NOVO**
+  - Cálculo automático de saldos líquidos entre usuários (`BalanceCalculationService`)
+  - Compensação automática de dívidas mútuas sem modificar despesas originais
+  - Endpoint para visualizar "quem deve quanto para quem" (`BalanceController`)
+  - Breakdown detalhado mostrando como chegou ao saldo final
+  - **Exemplo:** Maria deve R$100 para João, João deve R$30 para Maria → Saldo: Maria deve R$70 para João
+
 - **Estrutura de Dados e Banco**
   - Entidades JPA completas (User, ExpenseSpace, ExpenseParticipant, Expense, etc.)
   - Migrations com Flyway (V1 a V7: tabelas, convites, índices de performance)
@@ -137,6 +144,9 @@ A aplicação inclui documentação interativa da API usando Swagger/OpenAPI 3:
 - `PUT /api/expenses/{expenseId}` - Atualizar despesa existente
 - `DELETE /api/expenses/{expenseId}` - Excluir despesa
 
+### Cálculo de Saldos ⭐ **NOVO**
+- `GET /api/expenses/balances/space/{expenseSpaceId}` - Calcular saldos líquidos entre usuários
+
 ### Convites
 - `POST /api/invites/create` - Criar convite (OWNER/ADMIN apenas)
 - `POST /api/invites/accept` - Aceitar convite via token
@@ -207,27 +217,19 @@ export JWT_EXPIRATION=86400000
 
 ## Próximos Passos
 
-1. **Implementar sistema de saldos dinâmicos** ⭐ **PRIORITÁRIO**
-   - Endpoint para cálculo de saldos líquidos entre usuários
-   - Compensação automática de dívidas mútuas (cálculo dinâmico, sem modificar despesas originais)
-   - **Exemplo:** Maria deve R$100 para João, mas João deve R$30 para Maria → Saldo final: Maria deve R$70 para João
-   - Endpoint: `GET /api/expenses/balances/space/{id}` 
-   - Breakdown detalhado mostrando como chegou no saldo final
-   - Interface para visualizar "quem deve quanto para quem"
-
-2. **Implementar dashboard e relatórios financeiros**
+1. **Implementar dashboard e relatórios financeiros**
    - Relatórios de gastos por período
    - Visualizações gráficas (dados estruturados para Chart.js/ApexCharts)
    - Analytics: `GET /api/expenses/analytics/monthly/{id}`, `/analytics/by-category/{id}`
 
-3. **Funcionalidades avançadas de despesas**
+2. **Funcionalidades avançadas de despesas**
    - Sistema de categorias
    - Lembretes de vencimento
 
-4. **Desenvolver sistema de notificações**
+3. **Desenvolver sistema de notificações**
    - Sistema de alertas simples
 
-5. **Criar interface web**
+4. **Criar interface web**
    - Frontend para aceitar convites
    - Dashboard para visualização de gastos
 
