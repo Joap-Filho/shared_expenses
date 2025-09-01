@@ -207,19 +207,27 @@ export JWT_EXPIRATION=86400000
 
 ## Próximos Passos
 
-1. **Implementar dashboard e relatórios financeiros**
-   - Cálculo de saldos entre participantes (quem deve para quem)
-   - Relatórios de gastos por período
-   - Visualizações gráficas
+1. **Implementar sistema de saldos dinâmicos** ⭐ **PRIORITÁRIO**
+   - Endpoint para cálculo de saldos líquidos entre usuários
+   - Compensação automática de dívidas mútuas (cálculo dinâmico, sem modificar despesas originais)
+   - **Exemplo:** Maria deve R$100 para João, mas João deve R$30 para Maria → Saldo final: Maria deve R$70 para João
+   - Endpoint: `GET /api/expenses/balances/space/{id}` 
+   - Breakdown detalhado mostrando como chegou no saldo final
+   - Interface para visualizar "quem deve quanto para quem"
 
-2. **Funcionalidades avançadas de despesas**
+2. **Implementar dashboard e relatórios financeiros**
+   - Relatórios de gastos por período
+   - Visualizações gráficas (dados estruturados para Chart.js/ApexCharts)
+   - Analytics: `GET /api/expenses/analytics/monthly/{id}`, `/analytics/by-category/{id}`
+
+3. **Funcionalidades avançadas de despesas**
    - Sistema de categorias
    - Lembretes de vencimento
 
-3. **Desenvolver sistema de notificações**
+4. **Desenvolver sistema de notificações**
    - Sistema de alertas simples
 
-4. **Criar interface web**
+5. **Criar interface web**
    - Frontend para aceitar convites
    - Dashboard para visualização de gastos
 
