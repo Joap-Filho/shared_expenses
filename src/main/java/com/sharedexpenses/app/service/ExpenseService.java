@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -647,5 +648,49 @@ public class ExpenseService {
 
         // Deletar a configuração recorrente
         recurringExpenseRepository.delete(recurring);
+    }
+
+    /**
+     * Debug: Status de geração de despesas recorrentes  
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> debugRecurringGenerationStatus(String userEmail) {
+        LocalDate currentMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate nextMonth = currentMonth.plusMonths(1);
+        
+        List<RecurringExpense> allRecurring = recurringExpenseRepository.findAll()
+            .stream()
+            .filter(r -> authorizationService.isUserParticipantOfExpenseSpace(userEmail, r.getExpenseSpace().getId()))
+            .collect(Collectors.toList());
+            
+        List<Map<String, Object>> debugInfo = new ArrayList<>();
+        
+        for (RecurringExpense recurring : allRecurring) {
+            Map<String, Object> info = new HashMap<>();
+            info.put("recurringId", recurring.getId());
+            info.put("description", recurring.getDescription());
+            info.put("startDate", recurring.getStartDate());
+            info.put("endDate", recurring.getEndDate());
+            
+            // Verificar se é ativa
+            boolean isActive = !recurring.getStartDate().isAfter(currentMonth) &&
+                (recurring.getEndDate() == null || !recurring.getEndDate().isBefore(currentMonth));
+            info.put("isActive", isActive);
+            
+            // Verificar se já existe despesa
+            boolean alreadyExists = expenseRepository.findByExpenseSpaceId(recurring.getExpenseSpace().getId())
+                .stream()
+                .anyMatch(e -> e.getRecurringExpense() != null &&
+                    e.getRecurringExpense().getId().equals(recurring.getId()) &&
+                    e.getDate().isAfter(currentMonth.minusDays(1)) &&
+                    e.getDate().isBefore(nextMonth));
+            info.put("alreadyExists", alreadyExists);
+            info.put("currentMonth", currentMonth);
+            info.put("nextMonth", nextMonth);
+            
+            debugInfo.add(info);
+        }
+        
+        return debugInfo;
     }
 }

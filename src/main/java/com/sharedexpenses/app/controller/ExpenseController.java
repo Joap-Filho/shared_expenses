@@ -15,9 +15,18 @@ import com.sharedexpenses.app.dto.RecurringExpenseResponse;
 import com.sharedexpenses.app.entity.Expense;
 import com.sharedexpenses.app.service.ExpenseService;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.validation.Valid;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -130,5 +139,14 @@ public class ExpenseController {
         String userEmail = authentication.getName();
         expenseService.deleteRecurringExpense(recurringId, userEmail);
         return ResponseEntity.noContent().build();
+    }    /**
+     * Debug: Mostra status de geração para cada configuração recorrente
+     */
+    @GetMapping("/recurring/debug/generation-status")
+    public ResponseEntity<List<Map<String, Object>>> debugRecurringGenerationStatus(
+            Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<Map<String, Object>> debugInfo = expenseService.debugRecurringGenerationStatus(userEmail);
+        return ResponseEntity.ok(debugInfo);
     }
 }
