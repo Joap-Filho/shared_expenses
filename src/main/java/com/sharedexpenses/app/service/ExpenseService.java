@@ -204,7 +204,12 @@ public class ExpenseService {
         // Atualizar campos
         expense.setDescription(request.getDescription());
         expense.setTotalValue(request.getTotalValue());
-        expense.setDate(request.getDate());
+        
+        // Manter data original se não for informada no request
+        if (request.getDate() != null) {
+            expense.setDate(request.getDate());
+        }
+        
         expense.setIncludePayerInSplit(request.isIncludePayerInSplit());
 
         // Atualizar beneficiários
