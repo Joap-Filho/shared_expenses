@@ -15,6 +15,9 @@ public class ExpenseSpace {
 
     private String name;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @ManyToOne
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private User createdBy;
@@ -27,6 +30,9 @@ public class ExpenseSpace {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
