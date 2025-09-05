@@ -9,61 +9,26 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # Logs da aplicação Spring Boot
-  - job_name: spring-boot-logs
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: spring-boot-app
-          __path__: /var/log/app/*.log
-    pipeline_stages:
-      - match:
-          selector: '{job="spring-boot-app"}'
-          stages:
-            - regex:
-                expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3})\s+(?P<level>\w+)\s+(?P<thread>\S+)\s+(?P<logger>\S+)\s+:\s+(?P<message>.*)'
-            - timestamp:
-                source: timestamp
-                format: '2006-01-02 15:04:05.000'
-            - labels:
-                level:
-                thread:
-                logger:
-
-  # Logs do PostgreSQL
-  - job_name: postgres-logs
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: postgres
-          __path__: /var/log/postgresql/*.log
-    pipeline_stages:
-      - match:
-          selector: '{job="postgres"}'
-          stages:
-            - regex:
-                expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} \w+)\s+\[(?P<pid>\d+)\]\s+(?P<level>\w+):\s+(?P<message>.*)'
-            - timestamp:
-                source: timestamp
-                format: '2006-01-02 15:04:05.000 MST'
-            - labels:
-                level:
-                pid:
-
-  # Logs do container shared_expenses
-  - job_name: shared_expenses-logs
+  # Logs de todos os containers Docker
+  - job_name: docker-logs
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
+        filters:
+          - name: label
+            values: ["promtail=true"]
     relabel_configs:
-      # Manter apenas o container shared_expenses
       - source_labels: ['__meta_docker_container_name']
-        regex: 'shared_expenses'
-        action: keep
-      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
         target_label: 'container'
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: 'stream'
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'service'
+    pipeline_stages:
+      - docker: {}
+      - labels:
+          stream:
+          container:
+          service:
 
