@@ -38,7 +38,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/docs/**", "/api-docs/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/actuator/prometheus").permitAll() // <-- libera Prometheus
+                .requestMatchers("/actuator/**").permitAll() // <-- libera Prometheus
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
