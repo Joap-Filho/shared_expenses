@@ -32,7 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Pular filtro para rotas públicas
         String path = request.getRequestURI();
         if (path.startsWith("/auth/") || path.startsWith("/docs") || 
-            path.startsWith("/api-docs") || path.startsWith("/swagger-ui")) {
+            path.startsWith("/api-docs") || path.startsWith("/swagger-ui") ||
+            path.startsWith("/actuator/prometheus")) {  // <-- adicionar aqui
             filterChain.doFilter(request, response);
             return;
         }
