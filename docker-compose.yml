@@ -70,7 +70,7 @@ services:
     container_name: prometheus
     restart: unless-stopped
     ports:
-      - "127.0.0.1:9090:9090"  # Expor apenas para localhost
+      - "127.0.0.1:9091:9090"  # Expor apenas para localhost
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -90,7 +90,7 @@ services:
     container_name: loki
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3100:3100"  # Expor apenas para localhost
+      - "127.0.0.1:3101:3100"  # Expor apenas para localhost
     volumes:
       - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
       - loki_data:/loki
@@ -120,7 +120,7 @@ services:
     container_name: node-exporter
     restart: unless-stopped
     ports:
-      - "127.0.0.1:9100:9100"  # Expor apenas para localhost
+      - "127.0.0.1:9101:9100"  # Expor apenas para localhost
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -139,7 +139,7 @@ services:
     container_name: postgres-exporter
     restart: unless-stopped
     ports:
-      - "127.0.0.1:9187:9187"  # Expor apenas para localhost
+      - "127.0.0.1:9188:9187"  # Expor apenas para localhost
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
     networks:
