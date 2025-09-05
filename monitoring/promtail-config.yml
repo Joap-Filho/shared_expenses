@@ -52,14 +52,18 @@ scrape_configs:
                 level:
                 pid:
 
-  # Logs de containers Docker
-  - job_name: docker-logs
+  # Logs do container shared_expenses
+  - job_name: shared_expenses-logs
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
     relabel_configs:
+      # Manter apenas o container shared_expenses
       - source_labels: ['__meta_docker_container_name']
-        regex: '/(.*)'
+        regex: 'shared_expenses'
+        action: keep
+      - source_labels: ['__meta_docker_container_name']
         target_label: 'container'
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: 'stream'
+
