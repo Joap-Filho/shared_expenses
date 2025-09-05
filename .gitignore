@@ -50,3 +50,4 @@ ENUMS_FRONTEND.md
 monitoring/postgres-logs/
 monitoring/grafana-data/
 MONITORING.md
+.env.monitoring.example
