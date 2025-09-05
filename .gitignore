@@ -34,6 +34,7 @@ build/
 
 .env
 .env.example
+.env.monitoring
 FRONTEND_INVITE_GUIDE.md
 TESTES_DESPESAS.md
 SISTEMA_RECORRENTE.md
@@ -43,3 +44,9 @@ TESTE_SALDOS.md
 REFATORACAO_TITULO_DESCRICAO.md
 SISTEMA_CARTOES.md
 SISTEMA_STATUS_DESPESAS.md
+ENUMS_FRONTEND.md
+
+# Monitoring data
+monitoring/postgres-logs/
+monitoring/grafana-data/
+MONITORING.md
